@@ -6,7 +6,7 @@
   <title><%= title %> - Helpdesk Ticket System</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="/css/style.css">
-  <%- style %>
+  <%- typeof style !== 'undefined' ? style : '' %>
 </head>
 <body data-user-id="<%= typeof user !== 'undefined' ? user._id : '' %>" 
       data-role="<%= typeof user !== 'undefined' ? user.role : '' %>">
@@ -31,7 +31,7 @@
   <%- body %>
   
   <script src="/js/notifications.js"></script>
-  <%- script %>
+  <%- typeof script !== 'undefined' ? script : '' %>
   
   <script>
     // Convert flash messages to notifications
@@ -54,6 +54,19 @@
         });
       }
     });
+
+    // Check socket connection after a delay
+    setTimeout(function() {
+      if (typeof io !== 'undefined' && (!window.socket || !window.socket.connected)) {
+        console.warn('Socket connection failed or not established');
+        if (window.notifications) {
+          window.notifications.warning(
+            'Some real-time features may be unavailable. Please try logging out and back in.',
+            'Connection Issue'
+          );
+        }
+      }
+    }, 3000); // Check after 3 seconds
   </script>
 </body>
 </html>

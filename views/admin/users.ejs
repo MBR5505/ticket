@@ -559,13 +559,21 @@
   }
   
   function approveAdminRequest(userId) {
+    // Log the request for debugging
+    console.log(`Approving admin request for user ${userId}`);
+    
     fetch(`/admin/users/${userId}/approve`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       }
     })
-      .then(response => response.json())
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Server responded with status: ${response.status}`);
+        }
+        return response.json();
+      })
       .then(data => {
         if (data.success) {
           if (window.notifications) {
@@ -590,19 +598,27 @@
       .catch(error => {
         console.error('Error approving request:', error);
         if (window.notifications) {
-          window.notifications.error('Failed to approve admin request', 'Error');
+          window.notifications.error('Failed to approve admin request: ' + error.message, 'Error');
         }
       });
   }
   
   function denyAdminRequest(userId) {
+    // Log the request for debugging
+    console.log(`Denying admin request for user ${userId}`);
+    
     fetch(`/admin/users/${userId}/deny`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       }
     })
-      .then(response => response.json())
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Server responded with status: ${response.status}`);
+        }
+        return response.json();
+      })
       .then(data => {
         if (data.success) {
           if (window.notifications) {
@@ -627,7 +643,7 @@
       .catch(error => {
         console.error('Error denying request:', error);
         if (window.notifications) {
-          window.notifications.error('Failed to deny admin request', 'Error');
+          window.notifications.error('Failed to deny admin request: ' + error.message, 'Error');
         }
       });
   }

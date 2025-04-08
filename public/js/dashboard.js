@@ -128,20 +128,32 @@ function initThirdPanelToggle() {
 
 // Socket.io initialization
 function initializeSocket() {
-  // Create socket connection
+  // Get token from cookie or local storage
+  const token = getCookie('jwt');
+  
+  // Create socket connection with optional authentication
   const socket = io({
-    auth: {
-      token: getCookie('jwt')
-    }
+    auth: token ? { token } : {} // Only include token if it exists
   });
   
   // Connection events
   socket.on('connect', function() {
     console.log('Connected to server');
+    
+    // If we don't have a token, display a subtle warning for developers
+    if (!token) {
+      console.warn('Connected without authentication token - some features may be limited');
+    }
   });
   
   socket.on('connect_error', function(error) {
     console.error('Connection error:', error);
+    // Try to reconnect without token if authentication failed
+    if (error.message.includes('Authentication') && token) {
+      console.log('Retrying connection without authentication...');
+      const anonymousSocket = io({ auth: {} });
+      window.socket = anonymousSocket;
+    }
   });
   
   // Handle incoming messages

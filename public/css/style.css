@@ -1,3 +1,6 @@
+/* Import Styles First */
+@import url('dashboard.css');
+
 /* Base Styles */
 :root {
   --primary-color: #3498db;
@@ -679,9 +682,6 @@ textarea:focus {
   text-align: center;
   border-top: 1px solid var(--border-color);
 }
-
-/* Dashboard Import */
-@import url('dashboard.css');
 
 /* Responsive Styles */
 @media screen and (max-width: 768px) {

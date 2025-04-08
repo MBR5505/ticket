@@ -93,9 +93,11 @@ exports.login = async (req, res) => {
     // Generate token
     const token = generateToken(user._id);
     
-    // Set token in cookie
+    // Set token in cookie - update the cookie settings
     res.cookie('jwt', token, { 
       httpOnly: true,
+      secure: process.env.NODE_ENV === 'production', // Only set secure in production
+      sameSite: 'lax', // Helps with CSRF protection
       maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
     });
     
