@@ -1,0 +1,550 @@
+<%- contentFor('body') %>
+
+<div class="dashboard-container">
+  <!-- Left Navbar -->
+  <nav class="navbar">
+    <div class="navbar-header">
+      <div class="logo">
+        <i class="fas fa-headset"></i>
+        <span class="logo-text">Helpdesk</span>
+      </div>
+      <div class="navbar-toggle">
+        <i class="fas fa-bars"></i>
+      </div>
+    </div>
+    
+    <div class="navbar-items">
+      <!-- Admin Navigation -->
+      <a href="/admin/dashboard" class="navbar-item">
+        <i class="fas fa-home"></i>
+        <span>Dashboard</span>
+      </a>
+      <a href="/admin/tickets" class="navbar-item">
+        <i class="fas fa-ticket-alt"></i>
+        <span>All Tickets</span>
+      </a>
+      <a href="/admin/messages" class="navbar-item active">
+        <i class="fas fa-comments"></i>
+        <span>Messages</span>
+      </a>
+      <a href="/admin/statistics" class="navbar-item">
+        <i class="fas fa-chart-bar"></i>
+        <span>Statistics</span>
+      </a>
+      <% if (user.role === 'head_admin') { %>
+        <a href="#" class="navbar-item" data-panel="notifications-panel">
+          <i class="fas fa-bell"></i>
+          <span>Notifications</span>
+        </a>
+        <a href="/admin/users" class="navbar-item">
+          <i class="fas fa-users"></i>
+          <span>Users</span>
+        </a>
+      <% } %>
+      <a href="#" class="navbar-item" data-panel="settings-panel">
+        <i class="fas fa-cog"></i>
+        <span>Settings</span>
+      </a>
+      
+      <!-- Logout -->
+      <a href="/auth/logout" class="navbar-item">
+        <i class="fas fa-sign-out-alt"></i>
+        <span>Logout</span>
+      </a>
+    </div>
+  </nav>
+  
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Left Panel (Chat List) -->
+    <div class="panel left-panel">
+      <div class="panel-header">
+        <h2>Customer Chats</h2>
+        <div class="panel-actions">
+          <input type="text" id="search-users" placeholder="Search customers...">
+          <select id="filter-chats">
+            <option value="all">All Chats</option>
+            <option value="active">Active</option>
+            <option value="recent">Recent</option>
+            <option value="unread">Unread</option>
+          </select>
+        </div>
+      </div>
+      <div class="panel-content">
+        <div class="chat-list">
+          <% if (chats && chats.length > 0) { %>
+            <% chats.forEach(chat => { %>
+              <div class="chat-item <%= chat.active ? 'active' : '' %> <%= chat.unreadCount > 0 ? 'unread' : '' %>" 
+                   data-user-id="<%= chat._id %>">
+                <div class="chat-user-info">
+                  <div class="chat-avatar">
+                    <%= chat.user.name.charAt(0).toUpperCase() %>
+                  </div>
+                  <div class="chat-details">
+                    <h4 class="chat-user-name"><%= chat.user.name %></h4>
+                    <p class="chat-preview"><%= chat.lastMessage %></p>
+                  </div>
+                </div>
+                <div class="chat-meta">
+                  <span class="chat-time"><%= formatTimeAgo(chat.updatedAt) %></span>
+                  <% if (chat.unreadCount > 0) { %>
+                    <span class="unread-badge"><%= chat.unreadCount %></span>
+                  <% } %>
+                </div>
+              </div>
+            <% }); %>
+          <% } else { %>
+            <div class="empty-chats">
+              <div class="empty-icon">
+                <i class="fas fa-comments"></i>
+              </div>
+              <h3>No Chats Found</h3>
+              <p>No customers have initiated a chat conversation yet.</p>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Panel Divider -->
+    <div class="panel-divider">
+      <span class="divider-icon">⋮⋮</span>
+    </div>
+    
+    <!-- Right Panel (Chat Messages) -->
+    <div class="panel right-panel">
+      <div class="panel-header chat-header" style="display: none;">
+        <div class="chat-user-info">
+          <div class="chat-avatar" id="chat-user-avatar"></div>
+          <div class="chat-details">
+            <h3 class="chat-user-name" id="chat-user-name"></h3>
+            <p class="chat-user-email" id="chat-user-email"></p>
+          </div>
+        </div>
+        <div class="chat-actions">
+          <button class="btn btn-outline" id="view-history-btn">
+            <i class="fas fa-history"></i> History
+          </button>
+          <button class="btn btn-primary" id="create-ticket-btn">
+            <i class="fas fa-ticket-alt"></i> Create Ticket
+          </button>
+        </div>
+      </div>
+      
+      <div class="empty-chat-state">
+        <div class="empty-icon">
+          <i class="fas fa-comments"></i>
+        </div>
+        <h3>Select a Chat</h3>
+        <p>Choose a customer chat from the list to start messaging.</p>
+      </div>
+      
+      <div class="chat-container" style="display: none;">
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-input">
+          <textarea placeholder="Type your message here..." id="message-input" 
+                    onkeydown="if(event.keyCode === 13 && !event.shiftKey) { event.preventDefault(); sendMessage(); }"></textarea>
+          <button onclick="sendMessage()">
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Create Ticket Modal -->
+  <div id="create-ticket-modal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>Create Ticket from Chat</h2>
+      <form id="create-ticket-form">
+        <input type="hidden" id="user-id" name="userId">
+        <div class="form-group">
+          <label for="title">Title</label>
+          <input type="text" id="title" name="title" required>
+        </div>
+        <div class="form-group">
+          <label for="category">Category</label>
+          <select id="category" name="category" required>
+            <option value="">Select a category</option>
+            <option value="technical">Technical Issue</option>
+            <option value="account">Account Problem</option>
+            <option value="billing">Billing Question</option>
+            <option value="feature">Feature Request</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea id="description" name="description" rows="5" required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="priority">Priority</label>
+          <select id="priority" name="priority">
+            <option value="low">Low</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">High</option>
+          </select>
+        </div>
+        <div class="form-group checkbox-group">
+          <input type="checkbox" id="assign-to-me" name="assignToMe" checked>
+          <label for="assign-to-me">Assign to me</label>
+        </div>
+        <button type="submit" class="btn btn-primary">Create Ticket</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<% contentFor('script') %>
+<script src="/socket.io/socket.io.js"></script>
+<script src="/js/dashboard.js"></script>
+<script>
+  let currentChat = null;
+  let socket;
+
+  document.addEventListener('DOMContentLoaded', function() {
+    // Setup socket connection
+    initSocket();
+    
+    // Chat item click handler
+    const chatItems = document.querySelectorAll('.chat-item');
+    chatItems.forEach(item => {
+      item.addEventListener('click', function() {
+        const userId = this.getAttribute('data-user-id');
+        loadChat(userId);
+        
+        // Update UI
+        chatItems.forEach(chat => chat.classList.remove('active'));
+        this.classList.add('active');
+        this.classList.remove('unread');
+        
+        // Remove unread badge
+        const unreadBadge = this.querySelector('.unread-badge');
+        if (unreadBadge) {
+          unreadBadge.remove();
+        }
+      });
+    });
+    
+    // Search functionality
+    const searchInput = document.getElementById('search-users');
+    if (searchInput) {
+      searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const chatItems = document.querySelectorAll('.chat-item');
+        
+        chatItems.forEach(item => {
+          const userName = item.querySelector('.chat-user-name').textContent.toLowerCase();
+          const preview = item.querySelector('.chat-preview').textContent.toLowerCase();
+          
+          if (userName.includes(searchTerm) || preview.includes(searchTerm)) {
+            item.style.display = '';
+          } else {
+            item.style.display = 'none';
+          }
+        });
+      });
+    }
+    
+    // Filter chats
+    const filterSelect = document.getElementById('filter-chats');
+    if (filterSelect) {
+      filterSelect.addEventListener('change', function() {
+        const filterValue = this.value;
+        const chatItems = document.querySelectorAll('.chat-item');
+        
+        chatItems.forEach(item => {
+          const isActive = item.classList.contains('active');
+          const isUnread = item.classList.contains('unread');
+          const timeElem = item.querySelector('.chat-time');
+          const isRecent = timeElem && timeElem.textContent.includes('minutes') || 
+                          timeElem.textContent.includes('just now') ||
+                          timeElem.textContent.includes('hour');
+          
+          if (filterValue === 'all' || 
+              (filterValue === 'active' && isActive) ||
+              (filterValue === 'unread' && isUnread) ||
+              (filterValue === 'recent' && isRecent)) {
+            item.style.display = '';
+          } else {
+            item.style.display = 'none';
+          }
+        });
+      });
+    }
+    
+    // Create ticket modal
+    const createTicketBtn = document.getElementById('create-ticket-btn');
+    const createTicketModal = document.getElementById('create-ticket-modal');
+    const closeModalBtn = document.querySelector('#create-ticket-modal .close');
+    
+    if (createTicketBtn && createTicketModal) {
+      createTicketBtn.addEventListener('click', function() {
+        if (currentChat) {
+          document.getElementById('user-id').value = currentChat;
+          createTicketModal.style.display = 'block';
+        }
+      });
+      
+      closeModalBtn.addEventListener('click', function() {
+        createTicketModal.style.display = 'none';
+      });
+      
+      window.addEventListener('click', function(event) {
+        if (event.target === createTicketModal) {
+          createTicketModal.style.display = 'none';
+        }
+      });
+    }
+    
+    // Create ticket form submission
+    const createTicketForm = document.getElementById('create-ticket-form');
+    if (createTicketForm) {
+      createTicketForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const userId = document.getElementById('user-id').value;
+        const title = document.getElementById('title').value;
+        const category = document.getElementById('category').value;
+        const description = document.getElementById('description').value;
+        const priority = document.getElementById('priority').value;
+        const assignToMe = document.getElementById('assign-to-me').checked;
+        
+        createTicketFromChat(userId, title, category, description, priority, assignToMe);
+      });
+    }
+  });
+  
+  function initSocket() {
+    socket = io();
+    
+    socket.on('connect', function() {
+      console.log('Connected to server');
+    });
+    
+    socket.on('new-message', function(data) {
+      if (currentChat && data.sender.id === currentChat) {
+        appendMessage(data, false);
+      } else {
+        // Update chat list item
+        updateChatListItem(data.sender.id, data.message);
+      }
+    });
+  }
+  
+  function loadChat(userId) {
+    currentChat = userId;
+    
+    // Show chat container and hide empty state
+    document.querySelector('.chat-container').style.display = 'flex';
+    document.querySelector('.empty-chat-state').style.display = 'none';
+    document.querySelector('.chat-header').style.display = 'flex';
+    
+    // Clear previous messages
+    document.getElementById('chat-messages').innerHTML = '<div class="chat-loading">Loading messages...</div>';
+    
+    // Load user info
+    fetch(`/chat/admin/chat/${userId}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Update user info in header
+          document.getElementById('chat-user-name').textContent = data.user.name;
+          document.getElementById('chat-user-email').textContent = data.user.email;
+          document.getElementById('chat-user-avatar').textContent = data.user.name.charAt(0).toUpperCase();
+          
+          // Display messages
+          const messagesContainer = document.getElementById('chat-messages');
+          messagesContainer.innerHTML = '';
+          
+          if (data.messages.length === 0) {
+            messagesContainer.innerHTML = `
+              <div class="chat-welcome">
+                <p>No messages yet. Start the conversation!</p>
+              </div>
+            `;
+          } else {
+            data.messages.forEach(message => {
+              appendMessage({
+                sender: {
+                  id: message.sender._id,
+                  name: message.sender.name
+                },
+                message: message.content,
+                timestamp: message.createdAt
+              }, true);
+            });
+          }
+          
+          // Scroll to bottom
+          messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        } else {
+          console.error('Failed to load chat:', data.message);
+          if (window.notifications) {
+            window.notifications.error(data.message, 'Chat Error');
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Error loading chat:', error);
+        if (window.notifications) {
+          window.notifications.error('Failed to load messages', 'Chat Error');
+        }
+      });
+  }
+  
+  function appendMessage(data, isHistory = false) {
+    const messagesContainer = document.getElementById('chat-messages');
+    const isOutgoing = data.sender.id === '<%= user._id %>';
+    
+    const messageHTML = `
+      <div class="message ${isOutgoing ? 'outgoing' : 'incoming'}">
+        <div class="message-avatar">
+          ${data.sender.name.charAt(0).toUpperCase()}
+        </div>
+        <div class="message-content">
+          <div class="message-bubble">
+            ${data.message}
+          </div>
+          <div class="message-time">
+            ${isHistory ? formatTime(data.timestamp) : formatTime(new Date())}
+          </div>
+        </div>
+      </div>
+    `;
+    
+    // Append message to container
+    messagesContainer.innerHTML += messageHTML;
+    
+    // Scroll to bottom
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
+  
+  function sendMessage() {
+    if (!currentChat) return;
+    
+    const messageInput = document.getElementById('message-input');
+    const message = messageInput.value.trim();
+    
+    if (!message) return;
+    
+    // Send message via socket
+    socket.emit('send-message', {
+      recipientId: currentChat,
+      message: message
+    });
+    
+    // Clear input
+    messageInput.value = '';
+    
+    // Add message to UI
+    appendMessage({
+      sender: {
+        id: '<%= user._id %>',
+        name: '<%= user.name %>'
+      },
+      message: message
+    });
+  }
+  
+  function updateChatListItem(userId, lastMessage) {
+    const chatItem = document.querySelector(`.chat-item[data-user-id="${userId}"]`);
+    if (!chatItem) return;
+    
+    // Update preview text
+    const preview = chatItem.querySelector('.chat-preview');
+    if (preview) {
+      preview.textContent = lastMessage.length > 30 ? lastMessage.substring(0, 30) + '...' : lastMessage;
+    }
+    
+    // Add unread badge if not current chat
+    if (currentChat !== userId) {
+      chatItem.classList.add('unread');
+      
+      let unreadBadge = chatItem.querySelector('.unread-badge');
+      if (unreadBadge) {
+        // Increment count
+        const count = parseInt(unreadBadge.textContent) + 1;
+        unreadBadge.textContent = count;
+      } else {
+        // Create new badge
+        const meta = chatItem.querySelector('.chat-meta');
+        if (meta) {
+          unreadBadge = document.createElement('span');
+          unreadBadge.className = 'unread-badge';
+          unreadBadge.textContent = '1';
+          meta.appendChild(unreadBadge);
+        }
+      }
+    }
+    
+    // Update timestamp
+    const timestamp = chatItem.querySelector('.chat-time');
+    if (timestamp) {
+      timestamp.textContent = 'just now';
+    }
+    
+    // Move to top of list
+    const chatList = chatItem.parentNode;
+    chatList.insertBefore(chatItem, chatList.firstChild);
+  }
+  
+  function createTicketFromChat(userId, title, category, description, priority, assignToMe) {
+    fetch('/tickets/create', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        userId,
+        title,
+        category,
+        description,
+        priority,
+        assignToMe
+      })
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Close modal
+          document.getElementById('create-ticket-modal').style.display = 'none';
+          
+          // Show success message
+          if (window.notifications) {
+            window.notifications.success('Ticket created successfully', 'Success');
+          }
+          
+          // Inform user about ticket creation
+          socket.emit('send-message', {
+            recipientId: userId,
+            message: `I've created a support ticket for your issue: "${title}". You can track the progress under My Tickets.`
+          });
+          
+          // Redirect to ticket
+          setTimeout(() => {
+            window.location.href = `/tickets/admin/${data.ticketId}`;
+          }, 1500);
+        } else {
+          if (window.notifications) {
+            window.notifications.error(data.message, 'Ticket Creation Error');
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Error creating ticket:', error);
+        if (window.notifications) {
+          window.notifications.error('Failed to create ticket', 'Ticket Creation Error');
+        }
+      });
+  }
+  
+  function formatTime(timestamp) {
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString([], { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    }) + ' ' + date.toLocaleDateString();
+  }
+</script>

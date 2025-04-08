@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Waiting for Admin Approval - Helpdesk Ticket System</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <%- contentFor('body') %>
+
+  <div class="waiting-page">
+    <div class="waiting-header">
+      <div class="logo">
+        <i class="fas fa-headset"></i>
+        <span>Helpdesk</span>
+      </div>
+      <h1>Admin Request Pending</h1>
+    </div>
+    
+    <div class="waiting-content">
+      <div class="waiting-icon">
+        <i class="fas fa-clock"></i>
+      </div>
+      <h2>Your request for admin privileges is being reviewed</h2>
+      <p>Thank you for requesting administrative access to the system. Your request has been received and is currently being reviewed by our head administrators.</p>
+      <p>Once your request is processed, you will be notified and automatically redirected to the appropriate dashboard.</p>
+      
+      <div class="waiting-status">
+        <div class="status-indicator"></div>
+        <span>Waiting for approval</span>
+      </div>
+    </div>
+    
+    <div class="waiting-footer">
+      <a href="/auth/logout" class="btn btn-secondary">
+        <i class="fas fa-sign-out-alt"></i> Logout
+      </a>
+    </div>
+  </div>
+
+  <% contentFor('script') %>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Connect to socket server to get real-time updates
+      const socket = io({
+        auth: {
+          token: getCookie('jwt')
+        }
+      });
+      
+      socket.on('connect', function() {
+        console.log('Connected to server');
+      });
+      
+      // Listen for admin request approval
+      socket.on('admin-request-approved', function(data) {
+        // Show success notification
+        if (window.notifications) {
+          window.notifications.success(data.message || 'Your admin request has been approved!');
+        } else {
+          alert('Your admin request has been approved!');
+        }
+        
+        // Redirect to admin dashboard after a short delay
+        setTimeout(function() {
+          window.location.href = '/admin/dashboard';
+        }, 2000);
+      });
+      
+      // Listen for admin request denial
+      socket.on('admin-request-denied', function(data) {
+        // Show error notification
+        if (window.notifications) {
+          window.notifications.error(data.message || 'Your admin request has been denied.');
+        } else {
+          alert('Your admin request has been denied.');
+        }
+        
+        // Redirect to user dashboard after a short delay
+        setTimeout(function() {
+          window.location.href = '/user/dashboard';
+        }, 2000);
+      });
+    });
+    
+    function getCookie(name) {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+  </script>
+</body>
+</html>

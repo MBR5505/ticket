@@ -1,0 +1,569 @@
+<%- contentFor('body') %>
+
+<div class="dashboard-container">
+  <!-- Left Navbar -->
+  <nav class="navbar">
+    <div class="navbar-header">
+      <div class="logo">
+        <i class="fas fa-headset"></i>
+        <span class="logo-text">Helpdesk</span>
+      </div>
+      <div class="navbar-toggle">
+        <i class="fas fa-bars"></i>
+      </div>
+    </div>
+    
+    <div class="navbar-items">
+      <!-- Admin Navigation -->
+      <a href="/admin/dashboard" class="navbar-item">
+        <i class="fas fa-home"></i>
+        <span>Dashboard</span>
+      </a>
+      <a href="/admin/tickets" class="navbar-item">
+        <i class="fas fa-ticket-alt"></i>
+        <span>All Tickets</span>
+      </a>
+      <a href="/admin/statistics" class="navbar-item active">
+        <i class="fas fa-chart-bar"></i>
+        <span>Statistics</span>
+      </a>
+      <% if (user.role === 'head_admin') { %>
+        <a href="#" class="navbar-item" data-panel="notifications-panel">
+          <i class="fas fa-bell"></i>
+          <span>Notifications</span>
+        </a>
+        <a href="/admin/users" class="navbar-item">
+          <i class="fas fa-users"></i>
+          <span>Users</span>
+        </a>
+      <% } %>
+      <a href="#" class="navbar-item" data-panel="settings-panel">
+        <i class="fas fa-cog"></i>
+        <span>Settings</span>
+      </a>
+      
+      <!-- Logout -->
+      <a href="/auth/logout" class="navbar-item">
+        <i class="fas fa-sign-out-alt"></i>
+        <span>Logout</span>
+      </a>
+    </div>
+  </nav>
+  
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Left Panel (Overview Statistics) -->
+    <div class="panel left-panel">
+      <div class="panel-header">
+        <h2>System Overview</h2>
+        <div class="panel-actions">
+          <select id="time-filter">
+            <option value="7">Last 7 days</option>
+            <option value="30" selected>Last 30 days</option>
+            <option value="90">Last 90 days</option>
+            <option value="365">Last year</option>
+          </select>
+        </div>
+      </div>
+      <div class="panel-content">
+        <!-- Stats Overview -->
+        <div class="stats-cards">
+          <div class="stats-card total">
+            <div class="stats-icon">
+              <i class="fas fa-ticket-alt"></i>
+            </div>
+            <div class="stats-info">
+              <h3>Total Tickets</h3>
+              <p class="stats-value"><%= stats.total %></p>
+              <p class="stats-percentage">100%</p>
+            </div>
+          </div>
+          
+          <div class="stats-card open">
+            <div class="stats-icon">
+              <i class="fas fa-exclamation-circle"></i>
+            </div>
+            <div class="stats-info">
+              <h3>Open</h3>
+              <p class="stats-value"><%= stats.open %></p>
+              <p class="stats-percentage"><%= Math.round((stats.open / stats.total) * 100) || 0 %>%</p>
+            </div>
+          </div>
+          
+          <div class="stats-card in-progress">
+            <div class="stats-icon">
+              <i class="fas fa-spinner"></i>
+            </div>
+            <div class="stats-info">
+              <h3>In Progress</h3>
+              <p class="stats-value"><%= stats.inProgress %></p>
+              <p class="stats-percentage"><%= Math.round((stats.inProgress / stats.total) * 100) || 0 %>%</p>
+            </div>
+          </div>
+          
+          <div class="stats-card resolved">
+            <div class="stats-icon">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stats-info">
+              <h3>Resolved</h3>
+              <p class="stats-value"><%= stats.resolved %></p>
+              <p class="stats-percentage"><%= Math.round((stats.resolved / stats.total) * 100) || 0 %>%</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Tickets Over Time Chart -->
+        <div class="stats-chart-container">
+          <h3>Tickets Over Time</h3>
+          <div class="stats-chart">
+            <canvas id="ticketsTimeChart"></canvas>
+          </div>
+        </div>
+        
+        <!-- Category & Priority Distribution -->
+        <div class="stats-row">
+          <div class="stats-chart-container half-width">
+            <h3>Tickets by Category</h3>
+            <div class="stats-chart">
+              <canvas id="categoryChart"></canvas>
+            </div>
+          </div>
+          
+          <div class="stats-chart-container half-width">
+            <h3>Tickets by Priority</h3>
+            <div class="stats-chart">
+              <canvas id="priorityChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Panel Divider -->
+    <div class="panel-divider">
+      <span class="divider-icon">⋮⋮</span>
+    </div>
+    
+    <!-- Right Panel (Admin Performance) -->
+    <div class="panel right-panel">
+      <div class="panel-header">
+        <h2>Admin Performance</h2>
+      </div>
+      <div class="panel-content">
+        <!-- Admin Performance Table -->
+        <div class="admin-performance-container">
+          <table class="admin-performance-table">
+            <thead>
+              <tr>
+                <th>Admin</th>
+                <th>Assigned</th>
+                <th>Resolved</th>
+                <th>Open</th>
+                <th>In Progress</th>
+                <th>Avg. Resolution Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% adminPerformance.forEach(admin => { %>
+                <tr>
+                  <td><%= admin.admin.name %></td>
+                  <td><%= admin.assignedTickets %></td>
+                  <td><%= admin.resolvedTickets %></td>
+                  <td><%= admin.openTickets %></td>
+                  <td><%= admin.inProgressTickets %></td>
+                  <td><%= admin.averageResolutionTime.toFixed(1) %> hours</td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- Admin Resolution Rate Chart -->
+        <div class="stats-chart-container">
+          <h3>Resolution Rate by Admin</h3>
+          <div class="stats-chart">
+            <canvas id="adminResolutionChart"></canvas>
+          </div>
+        </div>
+        
+        <!-- Resolution Time Chart -->
+        <div class="stats-chart-container">
+          <h3>Average Resolution Time by Category</h3>
+          <div class="stats-chart">
+            <canvas id="resolutionTimeChart"></canvas>
+          </div>
+        </div>
+        
+        <!-- Export Section -->
+        <div class="export-section">
+          <h3>Export Data</h3>
+          <div class="export-buttons">
+            <button class="btn btn-primary" id="export-tickets">
+              <i class="fas fa-file-export"></i> Export Tickets
+            </button>
+            <button class="btn btn-secondary" id="export-performance">
+              <i class="fas fa-file-export"></i> Export Performance Data
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<% contentFor('script') %>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="/js/dashboard.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Initialize charts
+    initializeCharts();
+    
+    // Time filter change handler
+    const timeFilter = document.getElementById('time-filter');
+    if (timeFilter) {
+      timeFilter.addEventListener('change', function() {
+        const days = parseInt(this.value);
+        fetchStatisticsForPeriod(days);
+      });
+    }
+    
+    // Export buttons
+    const exportTicketsBtn = document.getElementById('export-tickets');
+    if (exportTicketsBtn) {
+      exportTicketsBtn.addEventListener('click', function() {
+        exportTicketsData();
+      });
+    }
+    
+    const exportPerformanceBtn = document.getElementById('export-performance');
+    if (exportPerformanceBtn) {
+      exportPerformanceBtn.addEventListener('click', function() {
+        exportPerformanceData();
+      });
+    }
+  });
+  
+  function initializeCharts() {
+    // Tickets over time chart
+    const ticketsTimeData = <%- JSON.stringify(ticketsOverTime || []) %>;
+    createTicketsTimeChart(ticketsTimeData);
+    
+    // Category distribution chart
+    const categoryData = <%- JSON.stringify(categoryStats || []) %>;
+    createCategoryChart(categoryData);
+    
+    // Priority distribution chart
+    const priorityData = <%- JSON.stringify(priorityStats || []) %>;
+    createPriorityChart(priorityData);
+    
+    // Admin resolution chart
+    const adminData = <%- JSON.stringify(adminPerformance || []) %>;
+    createAdminResolutionChart(adminData);
+    
+    // Create mock resolution time chart (actual data would be calculated on backend)
+    createResolutionTimeChart();
+  }
+  
+  function createTicketsTimeChart(data) {
+    // Extract dates and counts
+    const dates = data.map(item => item._id);
+    const counts = data.map(item => item.count);
+    
+    // Create chart
+    const ctx = document.getElementById('ticketsTimeChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: dates,
+        datasets: [{
+          label: 'New Tickets',
+          data: counts,
+          backgroundColor: 'rgba(52, 152, 219, 0.2)',
+          borderColor: 'rgba(52, 152, 219, 1)',
+          borderWidth: 2,
+          tension: 0.4,
+          pointBackgroundColor: 'rgba(52, 152, 219, 1)'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'top',
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return `New tickets: ${context.parsed.y}`;
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              precision: 0
+            }
+          }
+        }
+      }
+    });
+  }
+  
+  function createCategoryChart(data) {
+    // Extract category names and counts
+    const categories = data.map(item => item._id);
+    const counts = data.map(item => item.count);
+    
+    // Create chart
+    const ctx = document.getElementById('categoryChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: categories,
+        datasets: [{
+          data: counts,
+          backgroundColor: [
+            'rgba(52, 152, 219, 0.7)',  // Blue
+            'rgba(46, 204, 113, 0.7)',  // Green
+            'rgba(155, 89, 182, 0.7)',  // Purple
+            'rgba(241, 196, 15, 0.7)',  // Yellow
+            'rgba(230, 126, 34, 0.7)'   // Orange
+          ],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              boxWidth: 12
+            }
+          }
+        }
+      }
+    });
+  }
+  
+  function createPriorityChart(data) {
+    // Extract priority levels and counts
+    const priorities = data.map(item => item._id.charAt(0).toUpperCase() + item._id.slice(1));
+    const counts = data.map(item => item.count);
+    
+    // Create chart
+    const ctx = document.getElementById('priorityChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: priorities,
+        datasets: [{
+          data: counts,
+          backgroundColor: [
+            'rgba(46, 204, 113, 0.7)',  // Green (Low)
+            'rgba(241, 196, 15, 0.7)',  // Yellow (Medium)
+            'rgba(231, 76, 60, 0.7)'    // Red (High)
+          ],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              boxWidth: 12
+            }
+          }
+        }
+      }
+    });
+  }
+  
+  function createAdminResolutionChart(data) {
+    // Extract admin names, assigned tickets and resolved tickets
+    const admins = data.map(item => item.admin.name);
+    const assigned = data.map(item => item.assignedTickets);
+    const resolved = data.map(item => item.resolvedTickets);
+    
+    // Create chart
+    const ctx = document.getElementById('adminResolutionChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: admins,
+        datasets: [
+          {
+            label: 'Assigned',
+            data: assigned,
+            backgroundColor: 'rgba(52, 152, 219, 0.7)',
+            borderColor: 'rgba(52, 152, 219, 1)',
+            borderWidth: 1
+          },
+          {
+            label: 'Resolved',
+            data: resolved,
+            backgroundColor: 'rgba(46, 204, 113, 0.7)',
+            borderColor: 'rgba(46, 204, 113, 1)',
+            borderWidth: 1
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'top',
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              precision: 0
+            }
+          }
+        }
+      }
+    });
+  }
+  
+  function createResolutionTimeChart() {
+    // For demonstration purposes, we'll create a sample chart
+    // This would be replaced with actual data from the backend
+    const categories = ['Technical', 'Account', 'Billing', 'Feature', 'Other'];
+    const times = [4.5, 3.2, 2.8, 8.1, 5.5]; // Average hours to resolve
+    
+    // Create chart
+    const ctx = document.getElementById('resolutionTimeChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: categories,
+        datasets: [{
+          label: 'Hours to Resolve',
+          data: times,
+          backgroundColor: 'rgba(155, 89, 182, 0.7)',
+          borderColor: 'rgba(155, 89, 182, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'top',
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: 'Hours'
+            }
+          }
+        }
+      }
+    });
+  }
+  
+  function fetchStatisticsForPeriod(days) {
+    fetch(`/admin/statistics/period/${days}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Update stats cards
+          document.querySelector('.stats-card.total .stats-value').textContent = data.stats.total;
+          document.querySelector('.stats-card.open .stats-value').textContent = data.stats.open;
+          document.querySelector('.stats-card.open .stats-percentage').textContent = 
+            `${Math.round((data.stats.open / data.stats.total) * 100) || 0}%`;
+          document.querySelector('.stats-card.in-progress .stats-value').textContent = data.stats.inProgress;
+          document.querySelector('.stats-card.in-progress .stats-percentage').textContent = 
+            `${Math.round((data.stats.inProgress / data.stats.total) * 100) || 0}%`;
+          document.querySelector('.stats-card.resolved .stats-value').textContent = data.stats.resolved;
+          document.querySelector('.stats-card.resolved .stats-percentage').textContent = 
+            `${Math.round((data.stats.resolved / data.stats.total) * 100) || 0}%`;
+          
+          // Update charts
+          // This would involve recreating or updating the existing charts
+          // For simplicity, let's assume we have functions to update each chart
+          
+          if (window.notifications) {
+            window.notifications.success(`Statistics updated for the last ${days} days`);
+          }
+        } else {
+          if (window.notifications) {
+            window.notifications.error('Failed to fetch statistics');
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching statistics:', error);
+        if (window.notifications) {
+          window.notifications.error('An error occurred while fetching statistics');
+        }
+      });
+  }
+  
+  function exportTicketsData() {
+    fetch('/admin/export/tickets')
+      .then(response => response.blob())
+      .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = 'tickets_export.csv';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        
+        if (window.notifications) {
+          window.notifications.success('Tickets data exported successfully');
+        }
+      })
+      .catch(error => {
+        console.error('Error exporting tickets:', error);
+        if (window.notifications) {
+          window.notifications.error('Failed to export ticket data');
+        }
+      });
+  }
+  
+  function exportPerformanceData() {
+    fetch('/admin/export/performance')
+      .then(response => response.blob())
+      .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = 'admin_performance.csv';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        
+        if (window.notifications) {
+          window.notifications.success('Performance data exported successfully');
+        }
+      })
+      .catch(error => {
+        console.error('Error exporting performance data:', error);
+        if (window.notifications) {
+          window.notifications.error('Failed to export performance data');
+        }
+      });
+  }
+</script>

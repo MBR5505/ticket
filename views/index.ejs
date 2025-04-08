@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Helpdesk Ticket System</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <%- contentFor('body') %>
+
+  <div class="landing-container">
+    <header class="landing-header">
+      <div class="logo">
+        <i class="fas fa-headset"></i>
+        <span>Helpdesk</span>
+      </div>
+      <nav class="landing-nav">
+        <% if (typeof user !== 'undefined' && user) { %>
+          <% if (user.role === 'user' || user.role === 'admin_requester') { %>
+            <a href="/user/dashboard" class="nav-link">Dashboard</a>
+          <% } else { %>
+            <a href="/admin/dashboard" class="nav-link">Dashboard</a>
+          <% } %>
+          <a href="/auth/logout" class="nav-link">Logout</a>
+        <% } else { %>
+          <a href="/auth/login" class="nav-link">Login</a>
+          <a href="/auth/register" class="nav-link">Register</a>
+        <% } %>
+      </nav>
+    </header>
+    
+    <main class="landing-main">
+      <div class="hero-section">
+        <div class="hero-content">
+          <h1>IT Support Made Simple</h1>
+          <p>Track, manage, and resolve IT issues efficiently with our helpdesk ticket system.</p>
+          <div class="hero-buttons">
+            <% if (typeof user !== 'undefined' && user) { %>
+              <% if (user.role === 'user' || user.role === 'admin_requester') { %>
+                <a href="/user/dashboard" class="btn btn-primary">Go to Dashboard</a>
+              <% } else { %>
+                <a href="/admin/dashboard" class="btn btn-primary">Go to Dashboard</a>
+              <% } %>
+            <% } else { %>
+              <a href="/auth/register" class="btn btn-primary">Get Started</a>
+              <a href="/auth/login" class="btn btn-secondary">Sign In</a>
+            <% } %>
+          </div>
+        </div>
+        <div class="hero-image">
+          <img src="/img/hero-image.svg" alt="IT Support Illustration">
+        </div>
+      </div>
+      
+      <div class="features-section">
+        <h2>Why Choose Our Helpdesk?</h2>
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-ticket-alt"></i>
+            </div>
+            <h3>Easy Ticket Creation</h3>
+            <p>Create and manage support tickets with just a few clicks. Track the status of your requests in real-time.</p>
+          </div>
+          
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-comments"></i>
+            </div>
+            <h3>Real-time Chat</h3>
+            <p>Communicate directly with support staff through our integrated messaging system.</p>
+          </div>
+          
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-chart-line"></i>
+            </div>
+            <h3>Detailed Analytics</h3>
+            <p>Comprehensive reports and statistics to monitor performance and identify trends.</p>
+          </div>
+          
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-mobile-alt"></i>
+            </div>
+            <h3>Mobile Friendly</h3>
+            <p>Access your support tickets from anywhere, on any device with our responsive design.</p>
+          </div>
+        </div>
+      </div>
+    </main>
+    
+    <footer class="landing-footer">
+      <div class="footer-content">
+        <p>&copy; 2023 Helpdesk Ticket System. All rights reserved.</p>
+        <div class="footer-links">
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Service</a>
+          <a href="#">Contact Us</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - Helpdesk Ticket System</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <%- style %>
+</head>
+<body data-theme="<%= user.preferences?.theme || 'light' %>" 
+      data-user-id="<%= user._id %>" 
+      data-role="<%= user.role %>">
+
+  <!-- Flash Messages -->
+  <% if (typeof success !== 'undefined' && success.length > 0) { %>
+    <div class="flash-message success">
+      <% success.forEach(function(message) { %>
+        <div class="message"><%= message %></div>
+      <% }); %>
+    </div>
+  <% } %>
+  
+  <% if (typeof error !== 'undefined' && error.length > 0) { %>
+    <div class="flash-message error">
+      <% error.forEach(function(message) { %>
+        <div class="message"><%= message %></div>
+      <% }); %>
+    </div>
+  <% } %>
+
+  <div class="dashboard-container">
+    <!-- Left Navbar -->
+    <nav class="navbar">
+      <div class="navbar-header">
+        <div class="logo">
+          <i class="fas fa-headset"></i>
+          <span class="logo-text">Helpdesk</span>
+        </div>
+        <div class="navbar-toggle">
+          <i class="fas fa-bars"></i>
+        </div>
+      </div>
+      
+      <div class="navbar-items">
+        <% if (user.role === 'user') { %>
+          <!-- User Navigation -->
+          <a href="/user/dashboard" class="navbar-item <%= activePage === 'dashboard' ? 'active' : '' %>">
+            <i class="fas fa-home"></i>
+            <span>Dashboard</span>
+          </a>
+          <a href="/user/tickets" class="navbar-item <%= activePage === 'tickets' ? 'active' : '' %>">
+            <i class="fas fa-ticket-alt"></i>
+            <span>My Tickets</span>
+          </a>
+          <a href="#" class="navbar-item" data-panel="new-ticket-panel">
+            <i class="fas fa-plus-circle"></i>
+            <span>New Ticket</span>
+          </a>
+          <a href="#" class="navbar-item" data-panel="settings-panel">
+            <i class="fas fa-cog"></i>
+            <span>Settings</span>
+          </a>
+        <% } else if (user.role === 'admin' || user.role === 'head_admin') { %>
+          <!-- Admin Navigation -->
+          <a href="/admin/dashboard" class="navbar-item <%= activePage === 'dashboard' ? 'active' : '' %>">
+            <i class="fas fa-home"></i>
+            <span>Dashboard</span>
+          </a>
+          <a href="/admin/tickets" class="navbar-item <%= activePage === 'tickets' ? 'active' : '' %>">
+            <i class="fas fa-ticket-alt"></i>
+            <span>All Tickets</span>
+          </a>
+          <a href="/admin/statistics" class="navbar-item <%= activePage === 'statistics' ? 'active' : '' %>">
+            <i class="fas fa-chart-bar"></i>
+            <span>Statistics</span>
+          </a>
+          <% if (user.role === 'head_admin') { %>
+            <a href="#" class="navbar-item" data-panel="notifications-panel">
+              <i class="fas fa-bell"></i>
+              <span>Notifications</span>
+              <div class="notification-badge" style="display: none;"></div>
+            </a>
+            <a href="/admin/users" class="navbar-item <%= activePage === 'users' ? 'active' : '' %>">
+              <i class="fas fa-users"></i>
+              <span>Users</span>
+            </a>
+          <% } %>
+          <a href="#" class="navbar-item" data-panel="settings-panel">
+            <i class="fas fa-cog"></i>
+            <span>Settings</span>
+          </a>
+        <% } %>
+        
+        <!-- Common navigation items -->
+        <a href="/auth/logout" class="navbar-item">
+          <i class="fas fa-sign-out-alt"></i>
+          <span>Logout</span>
+        </a>
+      </div>
+    </nav>
+    
+    <!-- Main Content Area -->
+    <div class="main-content">
+      <!-- Content will be different for user and admin -->
+      <%- body %>
+    </div>
+    
+    <!-- Third Panel (opened from navbar) -->
+    <div class="third-panel">
+      <div class="third-panel-header">
+        <h3 class="panel-title">Panel Title</h3>
+        <div class="close-panel">
+          <i class="fas fa-times"></i>
+        </div>
+      </div>
+      <div class="third-panel-content">
+        <!-- Different panel contents -->
+        <div id="new-ticket-panel" style="display: none;">
+          <h3>Create New Ticket</h3>
+          <form action="/tickets/create" method="POST" class="ticket-form">
+            <div class="form-group">
+              <label for="title">Title</label>
+              <input type="text" id="title" name="title" required>
+            </div>
+            <div class="form-group">
+              <label for="category">Category</label>
+              <select id="category" name="category" required>
+                <option value="">Select a category</option>
+                <option value="technical">Technical Issue</option>
+                <option value="account">Account Problem</option>
+                <option value="billing">Billing Question</option>
+                <option value="feature">Feature Request</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="description">Description</label>
+              <textarea id="description" name="description" rows="5" required></textarea>
+            </div>
+            <div class="form-group">
+              <label for="priority">Priority</label>
+              <select id="priority" name="priority">
+                <option value="low">Low</option>
+                <option value="medium" selected>Medium</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Submit Ticket</button>
+          </form>
+        </div>
+        
+        <div id="settings-panel" style="display: none;">
+          <h3>Account Settings</h3>
+          <form action="/user/settings" method="POST" class="settings-form">
+            <div class="form-group">
+              <label for="name">Name</label>
+              <input type="text" id="name" name="name" value="<%= user.name %>" required>
+            </div>
+            <div class="form-group">
+              <label for="email">Email</label>
+              <input type="email" id="email" name="email" value="<%= user.email %>" required>
+            </div>
+            <div class="form-group">
+              <label for="theme">Theme</label>
+              <select id="theme" name="theme">
+                <option value="light" <%= user.preferences.theme === 'light' ? 'selected' : '' %>>Light</option>
+                <option value="dark" <%= user.preferences.theme === 'dark' ? 'selected' : '' %>>Dark</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="chatPosition">Chat Position</label>
+              <select id="chatPosition" name="chatPosition">
+                <option value="middle" <%= user.preferences.layout.chatPosition === 'middle' ? 'selected' : '' %>>Middle</option>
+                <option value="right" <%= user.preferences.layout.chatPosition === 'right' ? 'selected' : '' %>>Right</option>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Save Settings</button>
+          </form>
+          
+          <div class="change-password">
+            <h3>Change Password</h3>
+            <form action="/user/change-password" method="POST">
+              <div class="form-group">
+                <label for="currentPassword">Current Password</label>
+                <input type="password" id="currentPassword" name="currentPassword" required>
+              </div>
+              <div class="form-group">
+                <label for="newPassword">New Password</label>
+                <input type="password" id="newPassword" name="newPassword" required>
+              </div>
+              <div class="form-group">
+                <label for="confirmPassword">Confirm New Password</label>
+                <input type="password" id="confirmPassword" name="confirmPassword" required>
+              </div>
+              <button type="submit" class="btn btn-secondary btn-block">Change Password</button>
+            </form>
+          </div>
+        </div>
+        
+        <div id="notifications-panel" style="display: none;">
+          <h3>Notifications</h3>
+          <div class="notifications-list">
+            <!-- Notification items will be populated here -->
+            <p class="empty-notification">No new notifications</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Notification Center -->
+  <div class="notification-center"></div>
+  
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/dashboard.js"></script>
+  <script src="/js/notifications.js"></script>
+  <%- script %>
+  
+  <script>
+    // Convert flash messages to notifications
+    document.addEventListener('DOMContentLoaded', function() {
+      if (window.notifications) {
+        const successMessages = document.querySelectorAll('.flash-message.success .message');
+        const errorMessages = document.querySelectorAll('.flash-message.error .message');
+        
+        successMessages.forEach(msg => {
+          window.notifications.success(msg.textContent);
+        });
+        
+        errorMessages.forEach(msg => {
+          window.notifications.error(msg.textContent);
+        });
+        
+        // Remove flash messages from DOM after conversion
+        document.querySelectorAll('.flash-message').forEach(el => {
+          el.style.display = 'none';
+        });
+      }
+    });
+  </script>
+</body>
+</html>

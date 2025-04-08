@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - Helpdesk Ticket System</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+  <%- style %>
+</head>
+<body data-user-id="<%= typeof user !== 'undefined' ? user._id : '' %>" 
+      data-role="<%= typeof user !== 'undefined' ? user.role : '' %>">
+
+  <!-- Flash Messages -->
+  <% if (typeof success !== 'undefined' && success.length > 0) { %>
+    <div class="flash-message success">
+      <% success.forEach(function(message) { %>
+        <div class="message"><%= message %></div>
+      <% }); %>
+    </div>
+  <% } %>
+  
+  <% if (typeof error !== 'undefined' && error.length > 0) { %>
+    <div class="flash-message error">
+      <% error.forEach(function(message) { %>
+        <div class="message"><%= message %></div>
+      <% }); %>
+    </div>
+  <% } %>
+
+  <%- body %>
+  
+  <script src="/js/notifications.js"></script>
+  <%- script %>
+  
+  <script>
+    // Convert flash messages to notifications
+    document.addEventListener('DOMContentLoaded', function() {
+      if (window.notifications) {
+        const successMessages = document.querySelectorAll('.flash-message.success .message');
+        const errorMessages = document.querySelectorAll('.flash-message.error .message');
+        
+        successMessages.forEach(msg => {
+          window.notifications.success(msg.textContent);
+        });
+        
+        errorMessages.forEach(msg => {
+          window.notifications.error(msg.textContent);
+        });
+        
+        // Remove flash messages from DOM after conversion
+        document.querySelectorAll('.flash-message').forEach(el => {
+          el.style.display = 'none';
+        });
+      }
+    });
+  </script>
+</body>
+</html>

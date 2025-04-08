@@ -1,0 +1,293 @@
+<%- contentFor('body') %>
+
+<div class="dashboard-container">
+  <!-- Left Navbar -->
+  <nav class="navbar">
+    <div class="navbar-header">
+      <div class="logo">
+        <i class="fas fa-headset"></i>
+        <span class="logo-text">Helpdesk</span>
+      </div>
+      <div class="navbar-toggle">
+        <i class="fas fa-bars"></i>
+      </div>
+    </div>
+    
+    <div class="navbar-items">
+      <!-- User Navigation -->
+      <a href="/user/dashboard" class="navbar-item">
+        <i class="fas fa-home"></i>
+        <span>Dashboard</span>
+      </a>
+      <a href="/user/tickets" class="navbar-item">
+        <i class="fas fa-ticket-alt"></i>
+        <span>My Tickets</span>
+      </a>
+      <a href="/user/messages" class="navbar-item">
+        <i class="fas fa-comments"></i>
+        <span>Messages</span>
+      </a>
+      <a href="#" class="navbar-item" data-panel="new-ticket-panel">
+        <i class="fas fa-plus-circle"></i>
+        <span>New Ticket</span>
+      </a>
+      <a href="/user/settings" class="navbar-item active">
+        <i class="fas fa-cog"></i>
+        <span>Settings</span>
+      </a>
+      
+      <!-- Logout -->
+      <a href="/auth/logout" class="navbar-item">
+        <i class="fas fa-sign-out-alt"></i>
+        <span>Logout</span>
+      </a>
+    </div>
+  </nav>
+  
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Settings Panel -->
+    <div class="panel left-panel">
+      <div class="panel-header">
+        <h2>Account Settings</h2>
+      </div>
+      <div class="panel-content">
+        <div class="settings-container">
+          <!-- Profile Settings -->
+          <div class="settings-section">
+            <h3>Profile Information</h3>
+            <div class="section-content">
+              <form action="/user/settings/update" method="POST" class="settings-form">
+                <div class="form-group">
+                  <label for="name">Full Name</label>
+                  <input type="text" id="name" name="name" value="<%= user.name %>" required>
+                </div>
+                
+                <div class="form-group">
+                  <label for="email">Email Address</label>
+                  <input type="email" id="email" name="email" value="<%= user.email %>" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+              </form>
+            </div>
+          </div>
+          
+          <!-- Change Password -->
+          <div class="settings-section">
+            <h3>Change Password</h3>
+            <div class="section-content">
+              <form action="/user/settings/password" method="POST" class="settings-form">
+                <div class="form-group">
+                  <label for="currentPassword">Current Password</label>
+                  <input type="password" id="currentPassword" name="currentPassword" required>
+                </div>
+                
+                <div class="form-group">
+                  <label for="newPassword">New Password</label>
+                  <input type="password" id="newPassword" name="newPassword" minlength="6" required>
+                </div>
+                
+                <div class="form-group">
+                  <label for="confirmPassword">Confirm New Password</label>
+                  <input type="password" id="confirmPassword" name="confirmPassword" minlength="6" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Change Password</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Panel Divider -->
+    <div class="panel-divider">
+      <span class="divider-icon">⋮⋮</span>
+    </div>
+    
+    <!-- Right Panel (Preferences) -->
+    <div class="panel right-panel">
+      <div class="panel-header">
+        <h2>Display Preferences</h2>
+      </div>
+      <div class="panel-content">
+        <div class="settings-container">
+          <!-- Theme Settings -->
+          <div class="settings-section">
+            <h3>Theme</h3>
+            <div class="section-content">
+              <form action="/user/settings/update" method="POST" class="settings-form">
+                <div class="theme-selector">
+                  <div class="theme-option">
+                    <input type="radio" id="theme-light" name="theme" value="light" 
+                           <%= !user.preferences || user.preferences.theme === 'light' ? 'checked' : '' %>>
+                    <label for="theme-light" class="theme-label light-theme">
+                      <div class="theme-preview"></div>
+                      <span>Light</span>
+                    </label>
+                  </div>
+                  
+                  <div class="theme-option">
+                    <input type="radio" id="theme-dark" name="theme" value="dark" 
+                           <%= user.preferences && user.preferences.theme === 'dark' ? 'checked' : '' %>>
+                    <label for="theme-dark" class="theme-label dark-theme">
+                      <div class="theme-preview"></div>
+                      <span>Dark</span>
+                    </label>
+                  </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Save Theme</button>
+              </form>
+            </div>
+          </div>
+          
+          <!-- Notification Settings -->
+          <div class="settings-section">
+            <h3>Notifications</h3>
+            <div class="section-content">
+              <form action="/user/settings/update" method="POST" class="settings-form">
+                <div class="form-group checkbox-group">
+                  <label class="checkbox-container">
+                    Email notifications
+                    <input type="checkbox" name="emailNotifications" 
+                           <%= !user.preferences || (user.preferences.notifications && user.preferences.notifications.email) ? 'checked' : '' %>>
+                    <span class="checkmark"></span>
+                  </label>
+                  <p class="help-text">Receive ticket updates and notifications via email</p>
+                </div>
+                
+                <div class="form-group checkbox-group">
+                  <label class="checkbox-container">
+                    Browser notifications
+                    <input type="checkbox" name="pushNotifications" 
+                           <%= !user.preferences || (user.preferences.notifications && user.preferences.notifications.push) ? 'checked' : '' %>>
+                    <span class="checkmark"></span>
+                  </label>
+                  <p class="help-text">Receive browser notifications for ticket updates</p>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Save Notification Settings</button>
+              </form>
+            </div>
+          </div>
+          
+          <!-- Layout Settings -->
+          <div class="settings-section">
+            <h3>Layout Preferences</h3>
+            <div class="section-content">
+              <form action="/user/settings/update" method="POST" class="settings-form">
+                <div class="form-group">
+                  <label>Chat Position</label>
+                  <div class="radio-group">
+                    <label class="radio-container">
+                      Middle (split view)
+                      <input type="radio" name="chatPosition" value="middle" 
+                             <%= user.preferences && user.preferences.layout && user.preferences.layout.chatPosition === 'middle' ? 'checked' : '' %>>
+                      <span class="radio-mark"></span>
+                    </label>
+                    
+                    <label class="radio-container">
+                      Right (regular)
+                      <input type="radio" name="chatPosition" value="right" 
+                             <%= !user.preferences || !user.preferences.layout || user.preferences.layout.chatPosition === 'right' ? 'checked' : '' %>>
+                      <span class="radio-mark"></span>
+                    </label>
+                  </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Save Layout</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Third Panel (for new ticket) -->
+  <div class="third-panel">
+    <div class="third-panel-header">
+      <h3 class="panel-title">Create New Ticket</h3>
+      <div class="close-panel">
+        <i class="fas fa-times"></i>
+      </div>
+    </div>
+    <div class="third-panel-content">
+      <div id="new-ticket-panel">
+        <form action="/tickets/create" method="POST" class="ticket-form">
+          <div class="form-group">
+            <label for="title">Title</label>
+            <input type="text" id="title" name="title" placeholder="Brief summary of your issue" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="category">Category</label>
+            <select id="category" name="category" required>
+              <option value="">Select a category</option>
+              <option value="technical">Technical Issue</option>
+              <option value="account">Account Problem</option>
+              <option value="billing">Billing Question</option>
+              <option value="feature">Feature Request</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="priority">Priority</label>
+            <select id="priority" name="priority">
+              <option value="low">Low</option>
+              <option value="medium" selected>Medium</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="description">Description</label>
+            <textarea id="description" name="description" rows="8" placeholder="Please provide details about your issue..." required></textarea>
+          </div>
+          
+          <button type="submit" class="btn btn-primary btn-block">Submit Ticket</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<% contentFor('script') %>
+<script src="/js/dashboard.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Password confirmation validation
+    const newPasswordInput = document.getElementById('newPassword');
+    const confirmPasswordInput = document.getElementById('confirmPassword');
+    
+    if (newPasswordInput && confirmPasswordInput) {
+      confirmPasswordInput.addEventListener('input', function() {
+        if (newPasswordInput.value !== this.value) {
+          this.setCustomValidity('Passwords do not match');
+        } else {
+          this.setCustomValidity('');
+        }
+      });
+      
+      newPasswordInput.addEventListener('input', function() {
+        if (confirmPasswordInput.value && confirmPasswordInput.value !== this.value) {
+          confirmPasswordInput.setCustomValidity('Passwords do not match');
+        } else {
+          confirmPasswordInput.setCustomValidity('');
+        }
+      });
+    }
+    
+    // Theme preview
+    const themeRadios = document.querySelectorAll('input[name="theme"]');
+    themeRadios.forEach(radio => {
+      radio.addEventListener('change', function() {
+        // Update body data-theme attribute to preview the theme
+        document.body.setAttribute('data-theme', this.value);
+      });
+    });
+  });
+</script>

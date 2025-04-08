@@ -1,0 +1,370 @@
+<%- contentFor('body') %>
+
+<div class="dashboard-container">
+  <!-- Left Navbar -->
+  <nav class="navbar">
+    <div class="navbar-header">
+      <div class="logo">
+        <i class="fas fa-headset"></i>
+        <span class="logo-text">Helpdesk</span>
+      </div>
+      <div class="navbar-toggle">
+        <i class="fas fa-bars"></i>
+      </div>
+    </div>
+    
+    <div class="navbar-items">
+      <!-- User Navigation -->
+      <a href="/user/dashboard" class="navbar-item active">
+        <i class="fas fa-home"></i>
+        <span>Dashboard</span>
+      </a>
+      <a href="/user/tickets" class="navbar-item">
+        <i class="fas fa-ticket-alt"></i>
+        <span>My Tickets</span>
+      </a>
+      <a href="/user/messages" class="navbar-item">
+        <i class="fas fa-comments"></i>
+        <span>Messages</span>
+      </a>
+      <a href="#" class="navbar-item" data-panel="new-ticket-panel">
+        <i class="fas fa-plus-circle"></i>
+        <span>New Ticket</span>
+      </a>
+      <a href="/user/settings" class="navbar-item">
+        <i class="fas fa-cog"></i>
+        <span>Settings</span>
+      </a>
+      
+      <!-- Logout -->
+      <a href="/auth/logout" class="navbar-item">
+        <i class="fas fa-sign-out-alt"></i>
+        <span>Logout</span>
+      </a>
+    </div>
+  </nav>
+  
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Left Panel (User Dashboard) -->
+    <div class="panel left-panel">
+      <div class="panel-header">
+        <h2>Dashboard</h2>
+        <div class="panel-actions">
+          <button class="btn btn-primary open-panel" data-panel="new-ticket-panel">
+            <i class="fas fa-plus"></i> New Ticket
+          </button>
+        </div>
+      </div>
+      <div class="panel-content">
+        <div class="welcome-card">
+          <div class="welcome-header">
+            <div class="welcome-icon">
+              <i class="fas fa-smile"></i>
+            </div>
+            <div class="welcome-message">
+              <h3>Welcome, <%= user.name %>!</h3>
+              <p>What can we help you with today?</p>
+            </div>
+          </div>
+          <div class="quick-actions">
+            <a href="#" class="quick-action-btn" data-panel="new-ticket-panel">
+              <i class="fas fa-ticket-alt"></i> Create Ticket
+            </a>
+            <a href="/user/messages" class="quick-action-btn">
+              <i class="fas fa-comments"></i> Chat Support
+            </a>
+            <a href="/user/tickets" class="quick-action-btn">
+              <i class="fas fa-list"></i> View Tickets
+            </a>
+          </div>
+        </div>
+        
+        <div class="dashboard-section">
+          <div class="section-header">
+            <h3>Recent Tickets</h3>
+            <a href="/user/tickets" class="section-link">View All</a>
+          </div>
+          
+          <% if (tickets && tickets.length > 0) { %>
+            <div class="tickets-list">
+              <% tickets.slice(0, 5).forEach(ticket => { %>
+                <div class="ticket-card" onclick="window.location.href='/tickets/user/<%= ticket._id %>'">
+                  <div class="ticket-header">
+                    <h4 class="ticket-title"><%= ticket.title %></h4>
+                    <span class="ticket-status <%= ticket.status %>">
+                      <%= ticket.status === 'open' ? 'Open' : 
+                         ticket.status === 'in_progress' ? 'In Progress' : 
+                         'Resolved' %>
+                    </span>
+                  </div>
+                  <div class="ticket-info">
+                    <span><i class="fas fa-calendar"></i> <%= formatTimeAgo(ticket.createdAt) %></span>
+                    <span><i class="fas fa-tag"></i> <%= ticket.category.charAt(0).toUpperCase() + ticket.category.slice(1) %></span>
+                    <span><i class="fas fa-flag"></i> <%= ticket.priority.charAt(0).toUpperCase() + ticket.priority.slice(1) %></span>
+                  </div>
+                  <div class="ticket-description">
+                    <%= ticket.description.length > 100 ? ticket.description.substring(0, 100) + '...' : ticket.description %>
+                  </div>
+                </div>
+              <% }); %>
+            </div>
+          <% } else { %>
+            <div class="empty-state">
+              <div class="empty-icon">
+                <i class="fas fa-ticket-alt"></i>
+              </div>
+              <h3>No Tickets Yet</h3>
+              <p>You haven't submitted any support tickets yet.</p>
+              <button class="btn btn-primary open-panel" data-panel="new-ticket-panel">
+                <i class="fas fa-plus"></i> Create Your First Ticket
+              </button>
+            </div>
+          <% } %>
+        </div>
+        
+        <div class="dashboard-section">
+          <div class="section-header">
+            <h3>Recent Messages</h3>
+            <a href="/user/messages" class="section-link">View All</a>
+          </div>
+          
+          <% if (messages && messages.length > 0) { %>
+            <div class="messages-list">
+              <% messages.slice(0, 3).forEach(message => { %>
+                <div class="message-preview" onclick="window.location.href='/user/messages'">
+                  <div class="message-avatar">
+                    <% if (message.sender._id.toString() !== user._id.toString() && 
+                          (message.sender.role === 'admin' || message.sender.role === 'head_admin')) { %>
+                      <i class="fas fa-headset"></i>
+                    <% } else { %>
+                      <%= message.sender.name.charAt(0).toUpperCase() %>
+                    <% } %>
+                  </div>
+                  <div class="message-content">
+                    <div class="message-header">
+                      <span class="message-sender">
+                        <%= message.sender._id.toString() === user._id.toString() ? 'You' : message.sender.name %>
+                        <% if (message.sender.role === 'admin' || message.sender.role === 'head_admin') { %>
+                          <span class="badge admin-badge">Admin</span>
+                        <% } %>
+                      </span>
+                      <span class="message-time"><%= formatTimeAgo(message.createdAt) %></span>
+                    </div>
+                    <div class="message-text">
+                      <%= message.content.length > 70 ? message.content.substring(0, 70) + '...' : message.content %>
+                    </div>
+                  </div>
+                </div>
+              <% }); %>
+            </div>
+          <% } else { %>
+            <div class="empty-state">
+              <div class="empty-icon">
+                <i class="fas fa-comments"></i>
+              </div>
+              <h3>No Messages Yet</h3>
+              <p>You haven't started any conversations with our support team.</p>
+              <a href="/user/messages" class="btn btn-primary">
+                <i class="fas fa-comment"></i> Start a Conversation
+              </a>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Panel Divider -->
+    <div class="panel-divider">
+      <span class="divider-icon">⋮⋮</span>
+    </div>
+    
+    <!-- Right Panel (Ticket Stats) -->
+    <div class="panel right-panel">
+      <div class="panel-header">
+        <h2>Your Support Status</h2>
+      </div>
+      <div class="panel-content">
+        <div class="ticket-stats">
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-ticket-alt"></i>
+            </div>
+            <div class="stat-info">
+              <h3>Total Tickets</h3>
+              <p class="stat-value"><%= tickets ? tickets.length : 0 %></p>
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-icon open">
+              <i class="fas fa-exclamation-circle"></i>
+            </div>
+            <div class="stat-info">
+              <h3>Open</h3>
+              <p class="stat-value"><%= tickets ? tickets.filter(t => t.status === 'open').length : 0 %></p>
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-icon in-progress">
+              <i class="fas fa-spinner"></i>
+            </div>
+            <div class="stat-info">
+              <h3>In Progress</h3>
+              <p class="stat-value"><%= tickets ? tickets.filter(t => t.status === 'in_progress').length : 0 %></p>
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-icon resolved">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-info">
+              <h3>Resolved</h3>
+              <p class="stat-value"><%= tickets ? tickets.filter(t => t.status === 'resolved').length : 0 %></p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="support-info">
+          <h3>Support Resources</h3>
+          <div class="resources-list">
+            <a href="#" class="resource-card">
+              <div class="resource-icon">
+                <i class="fas fa-book"></i>
+              </div>
+              <div class="resource-info">
+                <h4>Knowledge Base</h4>
+                <p>Find answers to common questions</p>
+              </div>
+            </a>
+            
+            <a href="#" class="resource-card">
+              <div class="resource-icon">
+                <i class="fas fa-video"></i>
+              </div>
+              <div class="resource-info">
+                <h4>Video Tutorials</h4>
+                <p>Watch helpful how-to guides</p>
+              </div>
+            </a>
+            
+            <a href="#" class="resource-card">
+              <div class="resource-icon">
+                <i class="fas fa-question-circle"></i>
+              </div>
+              <div class="resource-info">
+                <h4>FAQ</h4>
+                <p>Frequently asked questions</p>
+              </div>
+            </a>
+          </div>
+        </div>
+        
+        <div class="contact-info">
+          <h3>Contact Information</h3>
+          <div class="contact-details">
+            <div class="contact-item">
+              <i class="fas fa-envelope"></i>
+              <span>support@helpdesk.com</span>
+            </div>
+            <div class="contact-item">
+              <i class="fas fa-phone"></i>
+              <span>+1 234 567 890</span>
+            </div>
+            <div class="contact-item">
+              <i class="fas fa-clock"></i>
+              <span>Monday-Friday, 9am-5pm</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Third Panel (for new ticket) -->
+  <div class="third-panel">
+    <div class="third-panel-header">
+      <h3 class="panel-title">Create New Ticket</h3>
+      <div class="close-panel">
+        <i class="fas fa-times"></i>
+      </div>
+    </div>
+    <div class="third-panel-content">
+      <div id="new-ticket-panel">
+        <form action="/tickets/create" method="POST" class="ticket-form">
+          <div class="form-group">
+            <label for="title">Title</label>
+            <input type="text" id="title" name="title" placeholder="Brief summary of your issue" required>
+          </div>
+          <div class="form-group">
+            <label for="category">Category</label>
+            <select id="category" name="category" required>
+              <option value="">Select a category</option>
+              <option value="technical">Technical Issue</option>
+              <option value="account">Account Problem</option>
+              <option value="billing">Billing Question</option>
+              <option value="feature">Feature Request</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="priority">Priority</label>
+            <select id="priority" name="priority">
+              <option value="low">Low</option>
+              <option value="medium" selected>Medium</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="description">Description</label>
+            <textarea id="description" name="description" rows="8" placeholder="Please provide details about your issue..." required></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">Submit Ticket</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<% contentFor('script') %>
+<script src="/socket.io/socket.io.js"></script>
+<script src="/js/dashboard.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Open panel buttons
+    const panelButtons = document.querySelectorAll('.open-panel');
+    panelButtons.forEach(button => {
+      button.addEventListener('click', function(e) {
+        e.preventDefault();
+        const panelId = this.getAttribute('data-panel');
+        if (panelId) {
+          const thirdPanel = document.querySelector('.third-panel');
+          if (thirdPanel) {
+            thirdPanel.classList.add('open');
+            
+            // Update panel title
+            const panelTitle = thirdPanel.querySelector('.panel-title');
+            if (panelTitle) {
+              if (panelId === 'new-ticket-panel') {
+                panelTitle.textContent = 'Create New Ticket';
+              }
+            }
+          }
+        }
+      });
+    });
+    
+    // Close panel button
+    const closeButton = document.querySelector('.close-panel');
+    if (closeButton) {
+      closeButton.addEventListener('click', function() {
+        const thirdPanel = document.querySelector('.third-panel');
+        if (thirdPanel) {
+          thirdPanel.classList.remove('open');
+        }
+      });
+    }
+  });
+</script>

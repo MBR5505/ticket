@@ -1,0 +1,562 @@
+<%- contentFor('body') %>
+
+<div class="dashboard-container">
+  <!-- Left Navbar -->
+  <nav class="navbar">
+    <div class="navbar-header">
+      <div class="logo">
+        <i class="fas fa-headset"></i>
+        <span class="logo-text">Helpdesk</span>
+      </div>
+      <div class="navbar-toggle">
+        <i class="fas fa-bars"></i>
+      </div>
+    </div>
+    
+    <div class="navbar-items">
+      <!-- User Navigation -->
+      <a href="/user/dashboard" class="navbar-item">
+        <i class="fas fa-home"></i>
+        <span>Dashboard</span>
+      </a>
+      <a href="/user/tickets" class="navbar-item">
+        <i class="fas fa-ticket-alt"></i>
+        <span>My Tickets</span>
+      </a>
+      <a href="/user/messages" class="navbar-item active">
+        <i class="fas fa-comments"></i>
+        <span>Messages</span>
+      </a>
+      <a href="#" class="navbar-item" data-panel="new-ticket-panel">
+        <i class="fas fa-plus-circle"></i>
+        <span>New Ticket</span>
+      </a>
+      <a href="/user/settings" class="navbar-item">
+        <i class="fas fa-cog"></i>
+        <span>Settings</span>
+      </a>
+      
+      <!-- Logout -->
+      <a href="/auth/logout" class="navbar-item">
+        <i class="fas fa-sign-out-alt"></i>
+        <span>Logout</span>
+      </a>
+    </div>
+  </nav>
+  
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Left Panel (Conversations) -->
+    <div class="panel left-panel">
+      <div class="panel-header">
+        <h2>Support Conversations</h2>
+        <div class="panel-actions">
+          <button class="btn btn-primary" id="new-conversation-btn">
+            <i class="fas fa-plus"></i> New Conversation
+          </button>
+        </div>
+      </div>
+      <div class="panel-content">
+        <% if (conversations && conversations.length > 0) { %>
+          <div class="conversations-list">
+            <% conversations.forEach(conversation => { %>
+              <div class="conversation-item" data-id="<%= conversation.userId %>">
+                <div class="conversation-avatar">
+                  <% if (conversation.user.role === 'admin' || conversation.user.role === 'head_admin') { %>
+                    <i class="fas fa-headset"></i>
+                  <% } else { %>
+                    <%= conversation.user.name.charAt(0).toUpperCase() %>
+                  <% } %>
+                </div>
+                <div class="conversation-details">
+                  <h4 class="conversation-name">
+                    <%= conversation.user.role === 'admin' || conversation.user.role === 'head_admin' ? 
+                      'Support Agent: ' + conversation.user.name : conversation.user.name %>
+                  </h4>
+                  <p class="conversation-preview">
+                    <% if (conversation.lastMessage) { %>
+                      <% const sender = conversation.lastMessage.sender._id.toString() === user._id.toString() ? 
+                        'You: ' : conversation.user.name + ': ' %>
+                      <%= sender %><%= conversation.lastMessage.content.length > 30 ? 
+                                       conversation.lastMessage.content.substring(0, 30) + '...' : 
+                                       conversation.lastMessage.content %>
+                    <% } else { %>
+                      No messages yet
+                    <% } %>
+                  </p>
+                </div>
+                <div class="conversation-meta">
+                  <span class="conversation-time">
+                    <%= conversation.lastMessage ? formatTimeAgo(conversation.lastMessage.createdAt) : 'New' %>
+                  </span>
+                </div>
+              </div>
+            <% }); %>
+          </div>
+        <% } else { %>
+          <div class="empty-state">
+            <div class="empty-icon">
+              <i class="fas fa-comments"></i>
+            </div>
+            <h3>No Conversations Yet</h3>
+            <p>Start a new conversation with our support team.</p>
+            <button class="btn btn-primary" id="empty-new-conversation-btn">
+              <i class="fas fa-plus"></i> New Conversation
+            </button>
+          </div>
+        <% } %>
+      </div>
+    </div>
+    
+    <!-- Panel Divider -->
+    <div class="panel-divider">
+      <span class="divider-icon">⋮⋮</span>
+    </div>
+    
+    <!-- Right Panel (Chat Messages) -->
+    <div class="panel right-panel">
+      <div class="empty-chat-state">
+        <div class="empty-icon">
+          <i class="fas fa-comments"></i>
+        </div>
+        <h3>Select a Conversation</h3>
+        <p>Choose a conversation from the list to view messages.</p>
+      </div>
+      
+      <div class="chat-container" style="display: none;">
+        <div class="chat-header">
+          <div class="chat-user-info">
+            <div class="chat-avatar" id="conversation-avatar"></div>
+            <div class="chat-details">
+              <h3 class="chat-user-name" id="conversation-name"></h3>
+              <p class="chat-status" id="conversation-status"></p>
+            </div>
+          </div>
+          <div class="chat-actions">
+            <button class="btn btn-primary" id="create-ticket-from-chat">
+              <i class="fas fa-ticket-alt"></i> Create Ticket
+            </button>
+          </div>
+        </div>
+        
+        <div class="chat-messages" id="chat-messages"></div>
+        
+        <div class="chat-input">
+          <textarea placeholder="Type your message here..." id="message-input" 
+                    onkeydown="if(event.keyCode === 13 && !event.shiftKey) { event.preventDefault(); sendMessage(); }"></textarea>
+          <button onclick="sendMessage()">
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- New Conversation Modal -->
+  <div id="new-conversation-modal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>New Support Conversation</h2>
+      <form id="start-conversation-form">
+        <div class="form-group">
+          <label for="subject">Subject</label>
+          <input type="text" id="subject" name="subject" placeholder="What do you need help with?" required>
+        </div>
+        <div class="form-group">
+          <label for="message">Message</label>
+          <textarea id="message" name="message" rows="5" placeholder="Describe your issue in detail..." required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Start Conversation</button>
+      </form>
+    </div>
+  </div>
+  
+  <!-- Create Ticket Modal -->
+  <div id="create-ticket-modal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>Create Ticket from Conversation</h2>
+      <form id="create-ticket-form">
+        <div class="form-group">
+          <label for="title">Title</label>
+          <input type="text" id="title" name="title" required>
+        </div>
+        <div class="form-group">
+          <label for="category">Category</label>
+          <select id="category" name="category" required>
+            <option value="">Select a category</option>
+            <option value="technical">Technical Issue</option>
+            <option value="account">Account Problem</option>
+            <option value="billing">Billing Question</option>
+            <option value="feature">Feature Request</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea id="description" name="description" rows="5" required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="priority">Priority</label>
+          <select id="priority" name="priority">
+            <option value="low">Low</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">High</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Create Ticket</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<% contentFor('script') %>
+<script src="/socket.io/socket.io.js"></script>
+<script src="/js/dashboard.js"></script>
+<script>
+  let currentConversation = null;
+  let socket = null;
+
+  document.addEventListener('DOMContentLoaded', function() {
+    // Initialize socket connection
+    initSocket();
+    
+    // Conversation click handler
+    const conversationItems = document.querySelectorAll('.conversation-item');
+    conversationItems.forEach(item => {
+      item.addEventListener('click', function() {
+        const conversationId = this.getAttribute('data-id');
+        loadConversation(conversationId);
+        
+        // Update active state
+        conversationItems.forEach(conv => conv.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+    
+    // New conversation button
+    const newConversationButtons = [
+      document.getElementById('new-conversation-btn'),
+      document.getElementById('empty-new-conversation-btn')
+    ];
+    
+    newConversationButtons.forEach(btn => {
+      if (btn) {
+        btn.addEventListener('click', function() {
+          document.getElementById('new-conversation-modal').style.display = 'block';
+        });
+      }
+    });
+    
+    // Close modal buttons
+    const closeButtons = document.querySelectorAll('.modal .close');
+    closeButtons.forEach(btn => {
+      btn.addEventListener('click', function() {
+        this.closest('.modal').style.display = 'none';
+      });
+    });
+    
+    // Close modal when clicking outside
+    window.addEventListener('click', function(event) {
+      if (event.target.classList.contains('modal')) {
+        event.target.style.display = 'none';
+      }
+    });
+    
+    // New conversation form submission
+    const startConversationForm = document.getElementById('start-conversation-form');
+    if (startConversationForm) {
+      startConversationForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const subject = document.getElementById('subject').value;
+        const message = document.getElementById('message').value;
+        
+        startNewConversation(subject, message);
+      });
+    }
+    
+    // Create ticket from chat button
+    const createTicketBtn = document.getElementById('create-ticket-from-chat');
+    if (createTicketBtn) {
+      createTicketBtn.addEventListener('click', function() {
+        document.getElementById('create-ticket-modal').style.display = 'block';
+      });
+    }
+    
+    // Create ticket form submission
+    const createTicketForm = document.getElementById('create-ticket-form');
+    if (createTicketForm) {
+      createTicketForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const title = document.getElementById('title').value;
+        const category = document.getElementById('category').value;
+        const description = document.getElementById('description').value;
+        const priority = document.getElementById('priority').value;
+        
+        createTicketFromChat(title, category, description, priority);
+      });
+    }
+  });
+  
+  function initSocket() {
+    socket = io();
+    
+    socket.on('connect', function() {
+      console.log('Connected to server');
+    });
+    
+    socket.on('new-message', function(data) {
+      // If this conversation is currently open, append the message
+      if (currentConversation && data.sender.id === currentConversation) {
+        appendMessage(data, false);
+      } else {
+        // Update conversation list
+        updateConversationItem(data.sender.id, data.message);
+      }
+    });
+  }
+  
+  function loadConversation(conversationId) {
+    currentConversation = conversationId;
+    
+    // Show chat container
+    document.querySelector('.chat-container').style.display = 'flex';
+    document.querySelector('.empty-chat-state').style.display = 'none';
+    
+    // Clear previous messages
+    document.getElementById('chat-messages').innerHTML = '<div class="chat-loading">Loading messages...</div>';
+    
+    // Get conversation details
+    fetch(`/chat/conversation/${conversationId}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Update conversation details in header
+          document.getElementById('conversation-name').textContent = data.user.role === 'admin' || data.user.role === 'head_admin' ?
+            'Support Agent: ' + data.user.name : data.user.name;
+            
+          // Set avatar content
+          const avatarElem = document.getElementById('conversation-avatar');
+          if (data.user.role === 'admin' || data.user.role === 'head_admin') {
+            avatarElem.innerHTML = '<i class="fas fa-headset"></i>';
+          } else {
+            avatarElem.textContent = data.user.name.charAt(0).toUpperCase();
+          }
+          
+          // Set status
+          const statusElem = document.getElementById('conversation-status');
+          statusElem.textContent = 'Online'; // This would ideally be dynamic
+          
+          // Display messages
+          const messagesContainer = document.getElementById('chat-messages');
+          messagesContainer.innerHTML = '';
+          
+          if (data.messages.length === 0) {
+            messagesContainer.innerHTML = `
+              <div class="chat-welcome">
+                <p>No messages yet. Start the conversation!</p>
+              </div>
+            `;
+          } else {
+            data.messages.forEach(message => {
+              appendMessage({
+                sender: {
+                  id: message.sender._id,
+                  name: message.sender.name
+                },
+                message: message.content,
+                timestamp: message.createdAt
+              }, true);
+            });
+          }
+          
+          // Scroll to bottom
+          messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        } else {
+          console.error('Failed to load conversation:', data.message);
+          if (window.notifications) {
+            window.notifications.error(data.message, 'Conversation Error');
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Error loading conversation:', error);
+        if (window.notifications) {
+          window.notifications.error('Failed to load conversation', 'Error');
+        }
+      });
+  }
+  
+  function appendMessage(data, isHistory = false) {
+    const messagesContainer = document.getElementById('chat-messages');
+    const isOutgoing = data.sender.id === '<%= user._id %>';
+    
+    const messageHTML = `
+      <div class="message ${isOutgoing ? 'outgoing' : 'incoming'}">
+        <div class="message-avatar">
+          ${data.sender.name.charAt(0).toUpperCase()}
+        </div>
+        <div class="message-content">
+          <div class="message-bubble">
+            ${data.message}
+          </div>
+          <div class="message-time">
+            ${isHistory ? formatTime(data.timestamp) : formatTime(new Date())}
+          </div>
+        </div>
+      </div>
+    `;
+    
+    // Append message to container
+    messagesContainer.innerHTML += messageHTML;
+    
+    // Scroll to bottom
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
+  
+  function sendMessage() {
+    if (!currentConversation) return;
+    
+    const messageInput = document.getElementById('message-input');
+    const message = messageInput.value.trim();
+    
+    if (!message) return;
+    
+    // Send message via socket
+    socket.emit('send-message', {
+      recipientId: currentConversation,
+      message: message
+    });
+    
+    // Clear input
+    messageInput.value = '';
+    
+    // Add message to UI
+    appendMessage({
+      sender: {
+        id: '<%= user._id %>',
+        name: '<%= user.name %>'
+      },
+      message: message
+    });
+  }
+  
+  function startNewConversation(subject, message) {
+    fetch('/chat/new-conversation', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ subject, message })
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Close modal
+          document.getElementById('new-conversation-modal').style.display = 'none';
+          
+          // Refresh page to show the new conversation
+          window.location.reload();
+        } else {
+          if (window.notifications) {
+            window.notifications.error(data.message, 'Error');
+          } else {
+            alert('Failed to start conversation: ' + data.message);
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Error starting conversation:', error);
+        if (window.notifications) {
+          window.notifications.error('An error occurred', 'Error');
+        } else {
+          alert('An error occurred while starting the conversation');
+        }
+      });
+  }
+  
+  function createTicketFromChat(title, category, description, priority) {
+    if (!currentConversation) return;
+    
+    fetch('/tickets/create', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        title,
+        category,
+        description,
+        priority,
+        fromChat: currentConversation
+      })
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Close modal
+          document.getElementById('create-ticket-modal').style.display = 'none';
+          
+          if (window.notifications) {
+            window.notifications.success('Ticket created successfully', 'Success');
+          } else {
+            alert('Ticket created successfully!');
+          }
+          
+          // Redirect to ticket page
+          setTimeout(() => {
+            window.location.href = `/tickets/user/${data.ticketId}`;
+          }, 1500);
+        } else {
+          if (window.notifications) {
+            window.notifications.error(data.message, 'Error');
+          } else {
+            alert('Failed to create ticket: ' + data.message);
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Error creating ticket:', error);
+        if (window.notifications) {
+          window.notifications.error('An error occurred', 'Error');
+        } else {
+          alert('An error occurred while creating the ticket');
+        }
+      });
+  }
+  
+  function updateConversationItem(senderId, message) {
+    // Find the conversation item
+    const conversationItem = document.querySelector(`.conversation-item[data-id="${senderId}"]`);
+    
+    if (conversationItem) {
+      // Update the preview text
+      const preview = conversationItem.querySelector('.conversation-preview');
+      if (preview) {
+        preview.textContent = message.length > 30 ? message.substring(0, 30) + '...' : message;
+      }
+      
+      // Update the time
+      const time = conversationItem.querySelector('.conversation-time');
+      if (time) {
+        time.textContent = 'just now';
+      }
+      
+      // Move to top of list
+      const parent = conversationItem.parentNode;
+      if (parent) {
+        parent.insertBefore(conversationItem, parent.firstChild);
+      }
+    } else {
+      // If the conversation doesn't exist, refresh the page
+      window.location.reload();
+    }
+  }
+  
+  function formatTime(timestamp) {
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+</script>

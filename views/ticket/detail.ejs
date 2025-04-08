@@ -1,0 +1,663 @@
+<%- contentFor('body') %>
+
+<div class="dashboard-container">
+  <!-- Left Navbar -->
+  <nav class="navbar">
+    <div class="navbar-header">
+      <div class="logo">
+        <i class="fas fa-headset"></i>
+        <span class="logo-text">Helpdesk</span>
+      </div>
+      <div class="navbar-toggle">
+        <i class="fas fa-bars"></i>
+      </div>
+    </div>
+    
+    <div class="navbar-items">
+      <% if (user.role === 'user') { %>
+        <!-- User Navigation -->
+        <a href="/user/dashboard" class="navbar-item">
+          <i class="fas fa-home"></i>
+          <span>Dashboard</span>
+        </a>
+        <a href="/user/tickets" class="navbar-item active">
+          <i class="fas fa-ticket-alt"></i>
+          <span>My Tickets</span>
+        </a>
+        <a href="/user/messages" class="navbar-item">
+          <i class="fas fa-comments"></i>
+          <span>Messages</span>
+        </a>
+        <a href="#" class="navbar-item" data-panel="new-ticket-panel">
+          <i class="fas fa-plus-circle"></i>
+          <span>New Ticket</span>
+        </a>
+        <a href="/user/settings" class="navbar-item">
+          <i class="fas fa-cog"></i>
+          <span>Settings</span>
+        </a>
+      <% } else { %>
+        <!-- Admin Navigation -->
+        <a href="/admin/dashboard" class="navbar-item">
+          <i class="fas fa-home"></i>
+          <span>Dashboard</span>
+        </a>
+        <a href="/admin/tickets" class="navbar-item active">
+          <i class="fas fa-ticket-alt"></i>
+          <span>All Tickets</span>
+        </a>
+        <a href="/admin/statistics" class="navbar-item">
+          <i class="fas fa-chart-bar"></i>
+          <span>Statistics</span>
+        </a>
+        <% if (user.role === 'head_admin') { %>
+          <a href="/admin/users" class="navbar-item">
+            <i class="fas fa-users"></i>
+            <span>Users</span>
+          </a>
+        <% } %>
+        <a href="#" class="navbar-item" data-panel="settings-panel">
+          <i class="fas fa-cog"></i>
+          <span>Settings</span>
+        </a>
+      <% } %>
+      
+      <!-- Logout -->
+      <a href="/auth/logout" class="navbar-item">
+        <i class="fas fa-sign-out-alt"></i>
+        <span>Logout</span>
+      </a>
+    </div>
+  </nav>
+  
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Left Panel (Ticket Details) -->
+    <div class="panel left-panel">
+      <div class="panel-header">
+        <h2>
+          Ticket #<%= ticket._id.toString().slice(-6).toUpperCase() %>
+          <div class="ticket-status-badge <%= ticket.status %>">
+            <%= ticket.status === 'open' ? 'Open' : 
+               ticket.status === 'in_progress' ? 'In Progress' : 
+               'Resolved' %>
+          </div>
+        </h2>
+        <div class="panel-actions">
+          <a href="<%= user.role === 'user' ? '/user/tickets' : '/admin/tickets' %>" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Tickets
+          </a>
+        </div>
+      </div>
+      <div class="panel-content">
+        <div class="ticket-detail-container">
+          <div class="ticket-info-section">
+            <div class="ticket-header">
+              <h3 class="ticket-title"><%= ticket.title %></h3>
+              <div class="ticket-meta">
+                <span class="ticket-created">
+                  <i class="fas fa-calendar"></i> Created: <%= new Date(ticket.createdAt).toLocaleString() %>
+                </span>
+                <span class="ticket-updated">
+                  <i class="fas fa-sync"></i> Updated: <%= new Date(ticket.updatedAt).toLocaleString() %>
+                </span>
+              </div>
+            </div>
+            
+            <div class="ticket-attributes">
+              <div class="attribute">
+                <span class="attribute-label">Category:</span>
+                <span class="attribute-value"><%= ticket.category.charAt(0).toUpperCase() + ticket.category.slice(1) %></span>
+              </div>
+              <div class="attribute">
+                <span class="attribute-label">Priority:</span>
+                <span class="attribute-value priority-badge <%= ticket.priority %>">
+                  <%= ticket.priority.charAt(0).toUpperCase() + ticket.priority.slice(1) %>
+                </span>
+              </div>
+              <div class="attribute">
+                <span class="attribute-label">Submitted By:</span>
+                <span class="attribute-value"><%= ticket.user.name %> (<%= ticket.user.email %>)</span>
+              </div>
+              <div class="attribute">
+                <span class="attribute-label">Status:</span>
+                <span class="status-badge <%= ticket.status %>">
+                  <%= ticket.status === 'open' ? 'Open' : 
+                     ticket.status === 'in_progress' ? 'In Progress' : 
+                     'Resolved' %>
+                </span>
+              </div>
+              <div class="attribute">
+                <span class="attribute-label">Assigned To:</span>
+                <span class="attribute-value">
+                  <% if (ticket.assignedTo) { %>
+                    <%= ticket.assignedTo.name %>
+                  <% } else { %>
+                    <span class="unassigned">Unassigned</span>
+                  <% } %>
+                </span>
+              </div>
+            </div>
+            
+            <div class="ticket-description">
+              <h4>Description</h4>
+              <div class="description-content">
+                <%= ticket.description %>
+              </div>
+            </div>
+            
+            <% if (user.role === 'admin' || user.role === 'head_admin') { %>
+              <div class="ticket-actions">
+                <div class="action-group">
+                  <label for="status-select">Change Status:</label>
+                  <select id="status-select" class="status-select">
+                    <option value="open" <%= ticket.status === 'open' ? 'selected' : '' %>>Open</option>
+                    <option value="in_progress" <%= ticket.status === 'in_progress' ? 'selected' : '' %>>In Progress</option>
+                    <option value="resolved" <%= ticket.status === 'resolved' ? 'selected' : '' %>>Resolved</option>
+                  </select>
+                  <button class="btn btn-primary" id="update-status-btn">Update</button>
+                </div>
+                
+                <div class="action-group">
+                  <label for="priority-select">Change Priority:</label>
+                  <select id="priority-select" class="priority-select">
+                    <option value="low" <%= ticket.priority === 'low' ? 'selected' : '' %>>Low</option>
+                    <option value="medium" <%= ticket.priority === 'medium' ? 'selected' : '' %>>Medium</option>
+                    <option value="high" <%= ticket.priority === 'high' ? 'selected' : '' %>>High</option>
+                  </select>
+                  <button class="btn btn-primary" id="update-priority-btn">Update</button>
+                </div>
+                
+                <div class="action-group">
+                  <label for="assign-select">Assign To:</label>
+                  <select id="assign-select" class="assign-select">
+                    <option value="">Unassigned</option>
+                    <% admins.forEach(admin => { %>
+                      <option value="<%= admin._id %>" <%= ticket.assignedTo && ticket.assignedTo._id.toString() === admin._id.toString() ? 'selected' : '' %>>
+                        <%= admin.name %>
+                      </option>
+                    <% }); %>
+                  </select>
+                  <button class="btn btn-primary" id="assign-ticket-btn">Assign</button>
+                </div>
+                
+                <% if (ticket.status === 'resolved') { %>
+                  <div class="action-group full-width">
+                    <button class="btn btn-primary" id="add-documentation-btn">
+                      <i class="fas fa-file-alt"></i> Add Documentation
+                    </button>
+                  </div>
+                <% } %>
+              </div>
+            <% } %>
+          </div>
+          
+          <div class="ticket-history">
+            <h4>Ticket History</h4>
+            <div class="history-list">
+              <% if (ticket.history && ticket.history.length > 0) { %>
+                <% ticket.history.forEach(item => { %>
+                  <div class="history-item">
+                    <div class="history-icon">
+                      <i class="fas 
+                        <% if (item.action.includes('created')) { %>fa-plus-circle<% } 
+                        else if (item.action.includes('Status')) { %>fa-sync<% }
+                        else if (item.action.includes('Priority')) { %>fa-flag<% }
+                        else if (item.action.includes('Assigned')) { %>fa-user-check<% }
+                        else if (item.action.includes('Documentation')) { %>fa-file-alt<% }
+                        else { %>fa-history<% } %>">
+                      </i>
+                    </div>
+                    <div class="history-details">
+                      <span class="history-action"><%= item.action %></span>
+                      <span class="history-by">
+                        by <%= item.performedBy ? item.performedBy.name : 'System' %>
+                        <% if (item.performedBy && (item.performedBy.role === 'admin' || item.performedBy.role === 'head_admin')) { %>
+                          <span class="badge admin-badge">Admin</span>
+                        <% } %>
+                      </span>
+                      <span class="history-time"><%= new Date(item.timestamp).toLocaleString() %></span>
+                    </div>
+                  </div>
+                <% }); %>
+              <% } else { %>
+                <div class="empty-history">
+                  No history available for this ticket.
+                </div>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Panel Divider -->
+    <div class="panel-divider">
+      <span class="divider-icon">⋮⋮</span>
+    </div>
+    
+    <!-- Right Panel (Messages) -->
+    <div class="panel right-panel">
+      <div class="panel-header">
+        <h2>Ticket Communication</h2>
+      </div>
+      <div class="panel-content">
+        <div class="chat-container">
+          <div class="chat-messages" id="ticket-messages">
+            <% if (messages && messages.length > 0) { %>
+              <% messages.forEach(message => { %>
+                <div class="message <%= message.sender._id.toString() === user._id.toString() ? 'outgoing' : 'incoming' %>">
+                  <% if (message.isSystem) { %>
+                    <div class="system-message">
+                      <div class="system-icon">
+                        <i class="fas fa-info-circle"></i>
+                      </div>
+                      <div class="system-content">
+                        <%= message.content %>
+                      </div>
+                      <div class="message-time">
+                        <%= new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) %>
+                      </div>
+                    </div>
+                  <% } else { %>
+                    <div class="message-avatar">
+                      <% if (message.sender.role === 'admin' || message.sender.role === 'head_admin') { %>
+                        <i class="fas fa-headset"></i>
+                      <% } else { %>
+                        <%= message.sender.name.charAt(0).toUpperCase() %>
+                      <% } %>
+                    </div>
+                    <div class="message-content">
+                      <div class="message-sender">
+                        <%= message.sender.name %>
+                        <% if (message.sender.role === 'admin' || message.sender.role === 'head_admin') { %>
+                          <span class="badge admin-badge">Admin</span>
+                        <% } %>
+                      </div>
+                      <div class="message-bubble">
+                        <%= message.content %>
+                      </div>
+                      <div class="message-time">
+                        <%= new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) %>
+                      </div>
+                    </div>
+                  <% } %>
+                </div>
+              <% }); %>
+            <% } else { %>
+              <div class="empty-messages">
+                <div class="empty-icon">
+                  <i class="fas fa-comments"></i>
+                </div>
+                <p>No messages yet. Start the conversation!</p>
+              </div>
+            <% } %>
+          </div>
+          
+          <div class="chat-input">
+            <textarea placeholder="Type your message here..." id="message-input" 
+                      onkeydown="if(event.keyCode === 13 && !event.shiftKey) { event.preventDefault(); sendMessage(); }"></textarea>
+            <button onclick="sendMessage()">
+              <i class="fas fa-paper-plane"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Documentation Modal -->
+  <div id="documentation-modal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>Add Documentation</h2>
+      <form id="documentation-form">
+        <div class="form-group">
+          <label for="problem">Problem Description</label>
+          <textarea id="problem" name="problem" rows="4" placeholder="Describe the problem in detail..."><%= ticket.documentation ? ticket.documentation.problem : '' %></textarea>
+        </div>
+        <div class="form-group">
+          <label for="solution">Solution</label>
+          <textarea id="solution" name="solution" rows="6" placeholder="Describe the solution..."><%= ticket.documentation ? ticket.documentation.solution : '' %></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Save Documentation</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<% contentFor('script') %>
+<script src="/socket.io/socket.io.js"></script>
+<script src="/js/dashboard.js"></script>
+<script>
+  let socket;
+  
+  document.addEventListener('DOMContentLoaded', function() {
+    // Initialize socket connection
+    initSocket();
+    
+    // Scroll to bottom of messages
+    scrollToBottom();
+    
+    // Admin controls event listeners
+    if (document.getElementById('update-status-btn')) {
+      document.getElementById('update-status-btn').addEventListener('click', updateTicketStatus);
+    }
+    
+    if (document.getElementById('update-priority-btn')) {
+      document.getElementById('update-priority-btn').addEventListener('click', updateTicketPriority);
+    }
+    
+    if (document.getElementById('assign-ticket-btn')) {
+      document.getElementById('assign-ticket-btn').addEventListener('click', assignTicket);
+    }
+    
+    if (document.getElementById('add-documentation-btn')) {
+      document.getElementById('add-documentation-btn').addEventListener('click', showDocumentationModal);
+    }
+    
+    // Modal close button
+    const closeButtons = document.querySelectorAll('.modal .close');
+    closeButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        this.closest('.modal').style.display = 'none';
+      });
+    });
+    
+    // Close modal when clicking outside
+    window.addEventListener('click', function(event) {
+      if (event.target.classList.contains('modal')) {
+        event.target.style.display = 'none';
+      }
+    });
+    
+    // Documentation form submission
+    const documentationForm = document.getElementById('documentation-form');
+    if (documentationForm) {
+      documentationForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        addDocumentation();
+      });
+    }
+  });
+  
+  function initSocket() {
+    socket = io();
+    
+    socket.on('connect', function() {
+      console.log('Connected to socket server');
+    });
+    
+    socket.on('connect_error', function(error) {
+      console.error('Connection error:', error);
+    });
+    
+    // Listen for new messages for this ticket
+    socket.on('new-message', function(data) {
+      if (data.ticket === '<%= ticket._id %>') {
+        appendMessage(data);
+        scrollToBottom();
+      }
+    });
+    
+    // Listen for ticket status updates
+    socket.on('ticket-status-updated', function(data) {
+      if (data.ticketId === '<%= ticket._id %>') {
+        window.location.reload();
+      }
+    });
+  }
+  
+  function scrollToBottom() {
+    const messageContainer = document.getElementById('ticket-messages');
+    if (messageContainer) {
+      messageContainer.scrollTop = messageContainer.scrollHeight;
+    }
+  }
+  
+  function appendMessage(data) {
+    const messageContainer = document.getElementById('ticket-messages');
+    const isCurrentUser = data.sender.id === '<%= user._id %>';
+    
+    if (data.isSystem) {
+      const systemMessageHTML = `
+        <div class="message">
+          <div class="system-message">
+            <div class="system-icon">
+              <i class="fas fa-info-circle"></i>
+            </div>
+            <div class="system-content">
+              ${data.message}
+            </div>
+            <div class="message-time">
+              ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </div>
+          </div>
+        </div>
+      `;
+      
+      messageContainer.innerHTML += systemMessageHTML;
+    } else {
+      const messageHTML = `
+        <div class="message ${isCurrentUser ? 'outgoing' : 'incoming'}">
+          <div class="message-avatar">
+            ${isCurrentUser ? '<%= user.name.charAt(0).toUpperCase() %>' : data.sender.name.charAt(0).toUpperCase()}
+          </div>
+          <div class="message-content">
+            <div class="message-sender">
+              ${data.sender.name}
+              ${data.sender.role === 'admin' || data.sender.role === 'head_admin' ? 
+                '<span class="badge admin-badge">Admin</span>' : ''}
+            </div>
+            <div class="message-bubble">
+              ${data.message}
+            </div>
+            <div class="message-time">
+              ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </div>
+          </div>
+        </div>
+      `;
+      
+      messageContainer.innerHTML += messageHTML;
+    }
+  }
+  
+  function sendMessage() {
+    const messageInput = document.getElementById('message-input');
+    const message = messageInput.value.trim();
+    
+    if (!message) return;
+    
+    fetch('/chat/send', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message,
+        recipientId: '<%= ticket.user._id %>',
+        ticketId: '<%= ticket._id %>'
+      })
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Clear input
+          messageInput.value = '';
+          
+          // Add message to UI (will be handled by socket event)
+        } else {
+          if (window.notifications) {
+            window.notifications.error(data.message, 'Error');
+          } else {
+            alert('Failed to send message: ' + data.message);
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Error sending message:', error);
+        if (window.notifications) {
+          window.notifications.error('An error occurred', 'Error');
+        } else {
+          alert('An error occurred while sending the message');
+        }
+      });
+  }
+  
+  function updateTicketStatus() {
+    const status = document.getElementById('status-select').value;
+    
+    fetch('/tickets/<%= ticket._id %>/status', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ status })
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          if (window.notifications) {
+            window.notifications.success(`Ticket status updated to ${status.replace('_', ' ')}`);
+          }
+          
+          // Reload page to reflect changes
+          window.location.reload();
+        } else {
+          if (window.notifications) {
+            window.notifications.error(data.message, 'Error');
+          } else {
+            alert('Failed to update status: ' + data.message);
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Error updating status:', error);
+        if (window.notifications) {
+          window.notifications.error('An error occurred', 'Error');
+        } else {
+          alert('An error occurred while updating the status');
+        }
+      });
+  }
+  
+  function updateTicketPriority() {
+    const priority = document.getElementById('priority-select').value;
+    
+    fetch('/tickets/<%= ticket._id %>/priority', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ priority })
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          if (window.notifications) {
+            window.notifications.success(`Ticket priority updated to ${priority}`);
+          }
+          
+          // Reload page to reflect changes
+          window.location.reload();
+        } else {
+          if (window.notifications) {
+            window.notifications.error(data.message, 'Error');
+          } else {
+            alert('Failed to update priority: ' + data.message);
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Error updating priority:', error);
+        if (window.notifications) {
+          window.notifications.error('An error occurred', 'Error');
+        } else {
+          alert('An error occurred while updating the priority');
+        }
+      });
+  }
+  
+  function assignTicket() {
+    const adminId = document.getElementById('assign-select').value;
+    
+    fetch('/tickets/<%= ticket._id %>/assign', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ adminId })
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          if (window.notifications) {
+            window.notifications.success(adminId ? 'Ticket assigned successfully' : 'Ticket unassigned');
+          }
+          
+          // Reload page to reflect changes
+          window.location.reload();
+        } else {
+          if (window.notifications) {
+            window.notifications.error(data.message, 'Error');
+          } else {
+            alert('Failed to assign ticket: ' + data.message);
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Error assigning ticket:', error);
+        if (window.notifications) {
+          window.notifications.error('An error occurred', 'Error');
+        } else {
+          alert('An error occurred while assigning the ticket');
+        }
+      });
+  }
+  
+  function showDocumentationModal() {
+    document.getElementById('documentation-modal').style.display = 'block';
+  }
+  
+  function addDocumentation() {
+    const problem = document.getElementById('problem').value;
+    const solution = document.getElementById('solution').value;
+    
+    fetch('/tickets/<%= ticket._id %>/documentation', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ problem, solution })
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          if (window.notifications) {
+            window.notifications.success('Documentation added successfully');
+          }
+          
+          // Close modal
+          document.getElementById('documentation-modal').style.display = 'none';
+          
+          // Reload page to reflect changes
+          window.location.reload();
+        } else {
+          if (window.notifications) {
+            window.notifications.error(data.message, 'Error');
+          } else {
+            alert('Failed to add documentation: ' + data.message);
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Error adding documentation:', error);
+        if (window.notifications) {
+          window.notifications.error('An error occurred', 'Error');
+        } else {
+          alert('An error occurred while adding documentation');
+        }
+      });
+  }
+</script>

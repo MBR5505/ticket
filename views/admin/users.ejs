@@ -1,0 +1,747 @@
+<%- contentFor('body') %>
+
+<div class="dashboard-container">
+  <!-- Left Navbar -->
+  <nav class="navbar">
+    <div class="navbar-header">
+      <div class="logo">
+        <i class="fas fa-headset"></i>
+        <span class="logo-text">Helpdesk</span>
+      </div>
+      <div class="navbar-toggle">
+        <i class="fas fa-bars"></i>
+      </div>
+    </div>
+    
+    <div class="navbar-items">
+      <!-- Admin Navigation -->
+      <a href="/admin/dashboard" class="navbar-item">
+        <i class="fas fa-home"></i>
+        <span>Dashboard</span>
+      </a>
+      <a href="/admin/tickets" class="navbar-item">
+        <i class="fas fa-ticket-alt"></i>
+        <span>All Tickets</span>
+      </a>
+      <a href="/admin/statistics" class="navbar-item">
+        <i class="fas fa-chart-bar"></i>
+        <span>Statistics</span>
+      </a>
+      <a href="#" class="navbar-item" data-panel="notifications-panel">
+        <i class="fas fa-bell"></i>
+        <span>Notifications</span>
+      </a>
+      <a href="/admin/users" class="navbar-item active">
+        <i class="fas fa-users"></i>
+        <span>Users</span>
+      </a>
+      <a href="#" class="navbar-item" data-panel="settings-panel">
+        <i class="fas fa-cog"></i>
+        <span>Settings</span>
+      </a>
+      
+      <!-- Logout -->
+      <a href="/auth/logout" class="navbar-item">
+        <i class="fas fa-sign-out-alt"></i>
+        <span>Logout</span>
+      </a>
+    </div>
+  </nav>
+  
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Left Panel (User List) -->
+    <div class="panel left-panel">
+      <div class="panel-header">
+        <h2>User Management</h2>
+        <div class="panel-actions">
+          <button class="btn btn-primary" id="create-user-btn">
+            <i class="fas fa-user-plus"></i> Create User
+          </button>
+          <div class="search-filter">
+            <input type="text" id="search-users" placeholder="Search users...">
+            <select id="filter-role">
+              <option value="all">All Roles</option>
+              <option value="user">Regular Users</option>
+              <option value="admin">Admins</option>
+              <option value="head_admin">Head Admins</option>
+              <option value="admin_requester">Admin Requests</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="panel-content">
+        <!-- Admin Requests Section -->
+        <div class="user-section">
+          <h3 class="section-title">
+            Admin Requests
+            <span class="count-badge"><%= adminRequests.length %></span>
+          </h3>
+          
+          <% if (adminRequests.length > 0) { %>
+            <div class="user-table-container">
+              <table class="user-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Registered</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% adminRequests.forEach(request => { %>
+                    <tr>
+                      <td><%= request.name %></td>
+                      <td><%= request.email %></td>
+                      <td><%= new Date(request.createdAt).toLocaleDateString() %></td>
+                      <td class="actions">
+                        <button class="btn btn-sm btn-approve approve-request" data-id="<%= request._id %>">
+                          <i class="fas fa-check"></i> Approve
+                        </button>
+                        <button class="btn btn-sm btn-deny deny-request" data-id="<%= request._id %>">
+                          <i class="fas fa-times"></i> Deny
+                        </button>
+                      </td>
+                    </tr>
+                  <% }); %>
+                </tbody>
+              </table>
+            </div>
+          <% } else { %>
+            <p class="empty-table-message">No pending admin requests.</p>
+          <% } %>
+        </div>
+        
+        <!-- Admin Users Section -->
+        <div class="user-section">
+          <h3 class="section-title">
+            Administrators
+            <span class="count-badge"><%= admins.length + headAdmins.length %></span>
+          </h3>
+          
+          <% if (admins.length > 0 || headAdmins.length > 0) { %>
+            <div class="user-table-container">
+              <table class="user-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Registered</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% [...headAdmins, ...admins].forEach(admin => { %>
+                    <tr>
+                      <td><%= admin.name %></td>
+                      <td><%= admin.email %></td>
+                      <td>
+                        <select class="role-select" data-id="<%= admin._id %>">
+                          <option value="admin" <%= admin.role === 'admin' ? 'selected' : '' %>>Admin</option>
+                          <option value="head_admin" <%= admin.role === 'head_admin' ? 'selected' : '' %>>Head Admin</option>
+                          <option value="user">Regular User</option>
+                        </select>
+                      </td>
+                      <td><%= new Date(admin.createdAt).toLocaleDateString() %></td>
+                      <td class="actions">
+                        <button class="btn btn-sm btn-secondary view-stats" data-id="<%= admin._id %>">
+                          <i class="fas fa-chart-line"></i> Stats
+                        </button>
+                      </td>
+                    </tr>
+                  <% }); %>
+                </tbody>
+              </table>
+            </div>
+          <% } else { %>
+            <p class="empty-table-message">No administrators found.</p>
+          <% } %>
+        </div>
+        
+        <!-- Regular Users Section -->
+        <div class="user-section">
+          <h3 class="section-title">
+            Regular Users
+            <span class="count-badge"><%= regularUsers.length %></span>
+          </h3>
+          
+          <% if (regularUsers.length > 0) { %>
+            <div class="user-table-container">
+              <table class="user-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Registered</th>
+                    <th>Tickets</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="regular-users-table">
+                  <% regularUsers.forEach(regularUser => { %>
+                    <tr data-id="<%= regularUser._id %>">
+                      <td><%= regularUser.name %></td>
+                      <td><%= regularUser.email %></td>
+                      <td><%= new Date(regularUser.createdAt).toLocaleDateString() %></td>
+                      <td class="ticket-count">-</td>
+                      <td class="actions">
+                        <button class="btn btn-sm btn-secondary promote-to-admin" data-id="<%= regularUser._id %>">
+                          <i class="fas fa-user-shield"></i> Make Admin
+                        </button>
+                      </td>
+                    </tr>
+                  <% }); %>
+                </tbody>
+              </table>
+            </div>
+          <% } else { %>
+            <p class="empty-table-message">No regular users found.</p>
+          <% } %>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Panel Divider -->
+    <div class="panel-divider">
+      <span class="divider-icon">⋮⋮</span>
+    </div>
+    
+    <!-- Right Panel (User Details/Stats) -->
+    <div class="panel right-panel">
+      <div class="panel-header">
+        <h2>User Details</h2>
+      </div>
+      <div class="panel-content">
+        <div class="empty-state" id="empty-user-details">
+          <div class="empty-icon">
+            <i class="fas fa-user"></i>
+          </div>
+          <h3>No User Selected</h3>
+          <p>Select a user to view their details and statistics.</p>
+        </div>
+        
+        <div class="user-details" id="user-details" style="display: none;">
+          <div class="user-profile-header">
+            <div class="user-avatar">
+              <span id="user-avatar-text">U</span>
+            </div>
+            <div class="user-info">
+              <h3 id="user-name">User Name</h3>
+              <p id="user-email">user@example.com</p>
+              <p id="user-role" class="user-role">Regular User</p>
+              <p id="user-created">Registered on: <span></span></p>
+            </div>
+          </div>
+          
+          <div class="user-stats">
+            <h3>User Activity</h3>
+            <div class="stats-cards">
+              <div class="stats-card total">
+                <div class="stats-icon">
+                  <i class="fas fa-ticket-alt"></i>
+                </div>
+                <div class="stats-info">
+                  <h3>Total Tickets</h3>
+                  <p class="stats-value" id="user-total-tickets">0</p>
+                </div>
+              </div>
+              
+              <div class="stats-card open">
+                <div class="stats-icon">
+                  <i class="fas fa-exclamation-circle"></i>
+                </div>
+                <div class="stats-info">
+                  <h3>Open</h3>
+                  <p class="stats-value" id="user-open-tickets">0</p>
+                </div>
+              </div>
+              
+              <div class="stats-card resolved">
+                <div class="stats-icon">
+                  <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stats-info">
+                  <h3>Resolved</h3>
+                  <p class="stats-value" id="user-resolved-tickets">0</p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="user-recent-tickets">
+              <h3>Recent Tickets</h3>
+              <div id="user-tickets-list">
+                <p class="loading-tickets">Loading tickets...</p>
+              </div>
+            </div>
+            
+            <div class="admin-performance" id="admin-performance" style="display: none;">
+              <h3>Admin Performance</h3>
+              <div class="stats-cards">
+                <div class="stats-card assigned">
+                  <div class="stats-icon">
+                    <i class="fas fa-tasks"></i>
+                  </div>
+                  <div class="stats-info">
+                    <h3>Assigned Tickets</h3>
+                    <p class="stats-value" id="admin-assigned-tickets">0</p>
+                  </div>
+                </div>
+                
+                <div class="stats-card resolved">
+                  <div class="stats-icon">
+                    <i class="fas fa-check-double"></i>
+                  </div>
+                  <div class="stats-info">
+                    <h3>Resolved</h3>
+                    <p class="stats-value" id="admin-resolved-tickets">0</p>
+                  </div>
+                </div>
+                
+                <div class="stats-card time">
+                  <div class="stats-icon">
+                    <i class="fas fa-clock"></i>
+                  </div>
+                  <div class="stats-info">
+                    <h3>Avg. Resolution Time</h3>
+                    <p class="stats-value" id="admin-resolution-time">0h</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Create User Modal -->
+  <div id="create-user-modal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>Create New User</h2>
+      <form id="create-user-form">
+        <div class="form-group">
+          <label for="name">Full Name</label>
+          <input type="text" id="name" name="name" required>
+        </div>
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" name="email" required>
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" required>
+        </div>
+        <div class="form-group">
+          <label for="role">Role</label>
+          <select id="role" name="role" required>
+            <option value="user">Regular User</option>
+            <option value="admin">Admin</option>
+            <option value="head_admin">Head Admin</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Create User</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<% contentFor('script') %>
+<script src="/socket.io/socket.io.js"></script>
+<script src="/js/dashboard.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Create User Button
+    const createUserBtn = document.getElementById('create-user-btn');
+    const createUserModal = document.getElementById('create-user-modal');
+    const closeModalBtn = document.querySelector('#create-user-modal .close');
+    
+    if (createUserBtn && createUserModal) {
+      createUserBtn.addEventListener('click', function() {
+        createUserModal.style.display = 'block';
+      });
+      
+      closeModalBtn.addEventListener('click', function() {
+        createUserModal.style.display = 'none';
+      });
+      
+      window.addEventListener('click', function(event) {
+        if (event.target === createUserModal) {
+          createUserModal.style.display = 'none';
+        }
+      });
+    }
+    
+    // Create User Form
+    const createUserForm = document.getElementById('create-user-form');
+    if (createUserForm) {
+      createUserForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const name = document.getElementById('name').value;
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const role = document.getElementById('role').value;
+        
+        createUser(name, email, password, role);
+      });
+    }
+    
+    // Role Select Change
+    const roleSelects = document.querySelectorAll('.role-select');
+    roleSelects.forEach(select => {
+      select.addEventListener('change', function() {
+        const userId = this.getAttribute('data-id');
+        const role = this.value;
+        
+        updateUserRole(userId, role);
+      });
+    });
+    
+    // Admin Request Buttons
+    const approveButtons = document.querySelectorAll('.approve-request');
+    approveButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const userId = this.getAttribute('data-id');
+        approveAdminRequest(userId);
+      });
+    });
+    
+    const denyButtons = document.querySelectorAll('.deny-request');
+    denyButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const userId = this.getAttribute('data-id');
+        denyAdminRequest(userId);
+      });
+    });
+    
+    // Promote to Admin Buttons
+    const promoteButtons = document.querySelectorAll('.promote-to-admin');
+    promoteButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const userId = this.getAttribute('data-id');
+        updateUserRole(userId, 'admin');
+      });
+    });
+    
+    // Search Users
+    const searchInput = document.getElementById('search-users');
+    if (searchInput) {
+      searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const rows = document.querySelectorAll('.user-table tbody tr');
+        
+        rows.forEach(row => {
+          const name = row.querySelector('td:first-child').textContent.toLowerCase();
+          const email = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+          
+          if (name.includes(searchTerm) || email.includes(searchTerm)) {
+            row.style.display = '';
+          } else {
+            row.style.display = 'none';
+          }
+        });
+      });
+    }
+    
+    // Filter by Role
+    const filterRole = document.getElementById('filter-role');
+    if (filterRole) {
+      filterRole.addEventListener('change', function() {
+        const role = this.value;
+        const sections = document.querySelectorAll('.user-section');
+        
+        if (role === 'all') {
+          sections.forEach(section => {
+            section.style.display = 'block';
+          });
+        } else {
+          sections.forEach(section => {
+            if (section.querySelector('.section-title').textContent.toLowerCase().includes(role.replace('_', ' '))) {
+              section.style.display = 'block';
+            } else {
+              section.style.display = 'none';
+            }
+          });
+        }
+      });
+    }
+    
+    // Load ticket counts for regular users
+    loadUserTicketCounts();
+    
+    // View Stats Buttons
+    const viewStatsButtons = document.querySelectorAll('.view-stats');
+    viewStatsButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const userId = this.getAttribute('data-id');
+        loadUserDetails(userId, true);
+      });
+    });
+    
+    // View User Details on row click for regular users
+    const regularUserRows = document.querySelectorAll('#regular-users-table tr');
+    regularUserRows.forEach(row => {
+      row.addEventListener('click', function(e) {
+        if (!e.target.classList.contains('btn')) {
+          const userId = this.getAttribute('data-id');
+          loadUserDetails(userId, false);
+        }
+      });
+    });
+  });
+  
+  function createUser(name, email, password, role) {
+    fetch('/admin/users', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ name, email, password, role })
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          if (window.notifications) {
+            window.notifications.success('User created successfully');
+          }
+          
+          // Hide modal and refresh page
+          document.getElementById('create-user-modal').style.display = 'none';
+          window.location.reload();
+        } else {
+          if (window.notifications) {
+            window.notifications.error(data.message, 'Error');
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Error creating user:', error);
+        if (window.notifications) {
+          window.notifications.error('Failed to create user', 'Error');
+        }
+      });
+  }
+  
+  function updateUserRole(userId, role) {
+    fetch(`/admin/users/${userId}/role`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ role })
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          if (window.notifications) {
+            window.notifications.success(`User role updated to ${role.replace('_', ' ')}`);
+          }
+          
+          // Refresh page after a delay
+          setTimeout(() => {
+            window.location.reload();
+          }, 1500);
+        } else {
+          if (window.notifications) {
+            window.notifications.error(data.message, 'Error');
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Error updating role:', error);
+        if (window.notifications) {
+          window.notifications.error('Failed to update user role', 'Error');
+        }
+      });
+  }
+  
+  function approveAdminRequest(userId) {
+    fetch(`/admin/users/${userId}/approve`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          if (window.notifications) {
+            window.notifications.success('Admin request approved');
+          }
+          
+          // Send socket message to notify the user
+          if (window.socket) {
+            window.socket.emit('approve-admin-request', { userId });
+          }
+          
+          // Refresh page after a delay
+          setTimeout(() => {
+            window.location.reload();
+          }, 1500);
+        } else {
+          if (window.notifications) {
+            window.notifications.error(data.message, 'Error');
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Error approving request:', error);
+        if (window.notifications) {
+          window.notifications.error('Failed to approve admin request', 'Error');
+        }
+      });
+  }
+  
+  function denyAdminRequest(userId) {
+    fetch(`/admin/users/${userId}/deny`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          if (window.notifications) {
+            window.notifications.success('Admin request denied');
+          }
+          
+          // Send socket message to notify the user
+          if (window.socket) {
+            window.socket.emit('deny-admin-request', { userId });
+          }
+          
+          // Refresh page after a delay
+          setTimeout(() => {
+            window.location.reload();
+          }, 1500);
+        } else {
+          if (window.notifications) {
+            window.notifications.error(data.message, 'Error');
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Error denying request:', error);
+        if (window.notifications) {
+          window.notifications.error('Failed to deny admin request', 'Error');
+        }
+      });
+  }
+  
+  function loadUserTicketCounts() {
+    const userRows = document.querySelectorAll('#regular-users-table tr');
+    
+    userRows.forEach(row => {
+      const userId = row.getAttribute('data-id');
+      if (!userId) return;
+      
+      fetch(`/admin/users/${userId}/ticket-count`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            const countCell = row.querySelector('.ticket-count');
+            if (countCell) {
+              countCell.textContent = data.count;
+            }
+          }
+        })
+        .catch(error => {
+          console.error(`Error fetching ticket count for user ${userId}:`, error);
+        });
+    });
+  }
+  
+  function loadUserDetails(userId, isAdmin) {
+    fetch(`/admin/users/${userId}/details`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Update user details
+          document.getElementById('user-name').textContent = data.user.name;
+          document.getElementById('user-email').textContent = data.user.email;
+          document.getElementById('user-role').textContent = formatRole(data.user.role);
+          document.getElementById('user-created').querySelector('span').textContent = 
+            new Date(data.user.createdAt).toLocaleDateString();
+          document.getElementById('user-avatar-text').textContent = data.user.name.charAt(0).toUpperCase();
+          
+          // Update ticket counts
+          document.getElementById('user-total-tickets').textContent = data.ticketStats.total;
+          document.getElementById('user-open-tickets').textContent = data.ticketStats.open;
+          document.getElementById('user-resolved-tickets').textContent = data.ticketStats.resolved;
+          
+          // Show admin performance metrics if is admin
+          if (isAdmin) {
+            document.getElementById('admin-performance').style.display = 'block';
+            document.getElementById('admin-assigned-tickets').textContent = data.adminStats.assignedTotal;
+            document.getElementById('admin-resolved-tickets').textContent = data.adminStats.resolved;
+            document.getElementById('admin-resolution-time').textContent = 
+              data.adminStats.avgResolutionTime.toFixed(1) + 'h';
+          } else {
+            document.getElementById('admin-performance').style.display = 'none';
+          }
+          
+          // Display user tickets
+          const ticketsList = document.getElementById('user-tickets-list');
+          if (data.tickets.length > 0) {
+            let ticketsHTML = '<div class="user-tickets-table-container">';
+            ticketsHTML += '<table class="user-tickets-table">';
+            ticketsHTML += '<thead><tr><th>ID</th><th>Title</th><th>Status</th><th>Created</th></tr></thead>';
+            ticketsHTML += '<tbody>';
+            
+            data.tickets.forEach(ticket => {
+              ticketsHTML += `
+                <tr>
+                  <td>${ticket._id.slice(-6).toUpperCase()}</td>
+                  <td>${ticket.title}</td>
+                  <td>
+                    <span class="status-badge ${ticket.status}">
+                      ${ticket.status === 'open' ? 'Open' : 
+                       ticket.status === 'in_progress' ? 'In Progress' : 
+                       'Resolved'}
+                    </span>
+                  </td>
+                  <td>${new Date(ticket.createdAt).toLocaleDateString()}</td>
+                </tr>
+              `;
+            });
+            
+            ticketsHTML += '</tbody></table></div>';
+            ticketsList.innerHTML = ticketsHTML;
+          } else {
+            ticketsList.innerHTML = '<p class="empty-tickets">No tickets found for this user.</p>';
+          }
+          
+          // Show user details and hide empty state
+          document.getElementById('empty-user-details').style.display = 'none';
+          document.getElementById('user-details').style.display = 'block';
+        } else {
+          if (window.notifications) {
+            window.notifications.error(data.message, 'Error');
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Error loading user details:', error);
+        if (window.notifications) {
+          window.notifications.error('Failed to load user details', 'Error');
+        }
+      });
+  }
+  
+  function formatRole(role) {
+    switch (role) {
+      case 'admin':
+        return 'Administrator';
+      case 'head_admin':
+        return 'Head Administrator';
+      case 'admin_requester':
+        return 'Admin Requester';
+      default:
+        return 'Regular User';
+    }
+  }
+</script>
