@@ -38,6 +38,18 @@ exports.createTicket = async (req, res) => {
       status: 'open'
     });
     
+    // Add attachments if any
+    if (req.files && req.files.length > 0) {
+      ticket.attachments = req.files.map(file => ({
+        filename: file.filename,
+        originalname: file.originalname,
+        mimetype: file.mimetype,
+        size: file.size,
+        path: file.path.replace(/\\/g, '/').split('public/')[1], // Store relative path
+        uploadedBy: req.user._id
+      }));
+    }
+    
     // Add history entry for creation
     ticket.history.push({
       action: 'Ticket created',
@@ -90,6 +102,117 @@ exports.createTicket = async (req, res) => {
     
     req.flash('error', 'Failed to create ticket');
     res.redirect('/user/dashboard');
+  }
+};
+
+// Add attachment to existing ticket
+exports.addAttachment = async (req, res) => {
+  try {
+    const ticket = await Ticket.findById(req.params.id);
+    
+    if (!ticket) {
+      return res.status(404).json({ success: false, message: 'Ticket not found' });
+    }
+    
+    // Check if user has access to this ticket
+    if (req.user.role === 'user' && ticket.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ success: false, message: 'Access denied' });
+    }
+    
+    // Add attachments
+    if (req.files && req.files.length > 0) {
+      const newAttachments = req.files.map(file => ({
+        filename: file.filename,
+        originalname: file.originalname,
+        mimetype: file.mimetype,
+        size: file.size,
+        path: file.path.replace(/\\/g, '/').split('public/')[1],
+        uploadedBy: req.user._id
+      }));
+      
+      ticket.attachments = [...ticket.attachments, ...newAttachments];
+      
+      // Add history entry
+      ticket.history.push({
+        action: `${req.files.length} attachment(s) added by ${req.user.name}`,
+        performedBy: req.user._id,
+        timestamp: new Date()
+      });
+      
+      await ticket.save();
+      
+      return res.status(200).json({
+        success: true,
+        message: 'Attachments added successfully',
+        attachments: newAttachments
+      });
+    } else {
+      return res.status(400).json({ success: false, message: 'No files provided' });
+    }
+  } catch (error) {
+    console.error('Add attachment error:', error);
+    res.status(500).json({ success: false, message: 'Error adding attachments' });
+  }
+};
+
+// Delete attachment from ticket
+exports.deleteAttachment = async (req, res) => {
+  try {
+    const { id, attachmentId } = req.params;
+    
+    const ticket = await Ticket.findById(id);
+    
+    if (!ticket) {
+      return res.status(404).json({ success: false, message: 'Ticket not found' });
+    }
+    
+    // Check if user has access to this ticket
+    if (req.user.role === 'user' && ticket.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ success: false, message: 'Access denied' });
+    }
+    
+    // Find attachment index
+    const attachmentIndex = ticket.attachments.findIndex(
+      attachment => attachment._id.toString() === attachmentId
+    );
+    
+    if (attachmentIndex === -1) {
+      return res.status(404).json({ success: false, message: 'Attachment not found' });
+    }
+    
+    // Get attachment path to delete file
+    const attachmentPath = ticket.attachments[attachmentIndex];
+    
+    // Remove attachment from array
+    ticket.attachments.splice(attachmentIndex, 1);
+    
+    // Add history entry
+    ticket.history.push({
+      action: `Attachment "${attachmentPath.originalname}" removed by ${req.user.name}`,
+      performedBy: req.user._id,
+      timestamp: new Date()
+    });
+    
+    await ticket.save();
+    
+    // Try to delete file from filesystem
+    try {
+      const fullPath = path.join(__dirname, '..', 'public', attachmentPath.path);
+      if (fs.existsSync(fullPath)) {
+        fs.unlinkSync(fullPath);
+      }
+    } catch (deleteError) {
+      console.error('Error deleting file:', deleteError);
+      // Continue even if file deletion fails
+    }
+    
+    return res.status(200).json({
+      success: true,
+      message: 'Attachment deleted successfully'
+    });
+  } catch (error) {
+    console.error('Delete attachment error:', error);
+    res.status(500).json({ success: false, message: 'Error deleting attachment' });
   }
 };
 

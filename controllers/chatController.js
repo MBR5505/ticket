@@ -155,21 +155,33 @@ exports.sendMessage = async (req, res) => {
   try {
     const { recipientId, message, ticketId } = req.body;
     
-    if (!message) {
+    // Check if there's a message or files
+    if (!message && (!req.files || req.files.length === 0)) {
       return res.status(400).json({
         success: false,
-        message: 'Message content is required'
+        message: 'Message content or attachments are required'
       });
     }
     
     // Create message
     const newMessage = new Message({
-      content: message,
+      content: message || '',
       sender: req.user._id,
       recipient: recipientId || null,
       ticket: ticketId || null,
       isRead: false
     });
+    
+    // Add attachments if any
+    if (req.files && req.files.length > 0) {
+      newMessage.attachments = req.files.map(file => ({
+        filename: file.filename,
+        originalname: file.originalname,
+        mimetype: file.mimetype,
+        size: file.size,
+        path: file.path.replace(/\\/g, '/').split('public/')[1] // Store relative path
+      }));
+    }
     
     await newMessage.save();
     

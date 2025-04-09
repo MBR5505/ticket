@@ -145,6 +145,68 @@
                 <%= ticket.description %>
               </div>
             </div>
+
+            <!-- Add Attachments Section -->
+            <div class="ticket-attachments">
+              <h4>Attachments</h4>
+              <% if (ticket.attachments && ticket.attachments.length > 0) { %>
+                <div class="attachments-list">
+                  <% ticket.attachments.forEach(attachment => { %>
+                    <div class="attachment-item">
+                      <% if (attachment.mimetype.startsWith('image/')) { %>
+                        <div class="attachment-preview">
+                          <a href="/<%= attachment.path %>" target="_blank">
+                            <img src="/<%= attachment.path %>" alt="<%= attachment.originalname %>">
+                          </a>
+                        </div>
+                      <% } %>
+                      <div class="attachment-details">
+                        <div class="attachment-icon">
+                          <i class="<%= getFileIconClass(attachment.mimetype) %>"></i>
+                        </div>
+                        <div class="attachment-info">
+                          <a href="/<%= attachment.path %>" target="_blank" class="attachment-filename">
+                            <%= attachment.originalname %>
+                          </a>
+                          <span class="attachment-meta">
+                            <%= formatFileSize(attachment.size) %> • 
+                            Added <%= new Date(attachment.uploadedAt).toLocaleDateString() %>
+                          </span>
+                        </div>
+                        <% if ((user.role === 'admin' || user.role === 'head_admin') || 
+                              (user.role === 'user' && user._id.toString() === ticket.user.toString())) { %>
+                          <button class="btn btn-sm btn-danger delete-attachment" data-id="<%= attachment._id %>">
+                            <i class="fas fa-trash"></i>
+                          </button>
+                        <% } %>
+                      </div>
+                    </div>
+                  <% }); %>
+                </div>
+              <% } else { %>
+                <div class="empty-attachments">
+                  <p>No attachments for this ticket.</p>
+                </div>
+              <% } %>
+              
+              <!-- Add new attachment form -->
+              <div class="add-attachment-section">
+                <form id="add-attachment-form" enctype="multipart/form-data">
+                  <div class="file-upload-container">
+                    <div class="file-upload-button">
+                      <i class="fas fa-paperclip"></i>
+                      <span>Add attachments</span>
+                      <input type="file" id="ticket-new-attachments" name="attachments" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv">
+                    </div>
+                    <div class="file-upload-limit">Max 5 files, 5MB each</div>
+                  </div>
+                  <div id="new-attachments-preview" class="attachments-preview-container"></div>
+                  <button type="submit" class="btn btn-primary" id="upload-attachments-btn" style="display: none;">
+                    <i class="fas fa-upload"></i> Upload Files
+                  </button>
+                </form>
+              </div>
+            </div>
             
             <% if (user.role === 'admin' || user.role === 'head_admin') { %>
               <div class="ticket-actions">
@@ -295,11 +357,22 @@
           </div>
           
           <div class="chat-input">
-            <textarea placeholder="Type your message here..." id="message-input" 
-                      onkeydown="if(event.keyCode === 13 && !event.shiftKey) { event.preventDefault(); sendMessage(); }"></textarea>
-            <button onclick="sendMessage()">
-              <i class="fas fa-paper-plane"></i>
-            </button>
+            <form id="message-form" enctype="multipart/form-data">
+              <div class="attachments-container" id="message-attachments-preview"></div>
+              <div class="message-input-container">
+                <textarea placeholder="Type your message here..." id="message-input" 
+                          onkeydown="if(event.keyCode === 13 && !event.shiftKey) { event.preventDefault(); sendMessage(); }"></textarea>
+                <div class="chat-actions">
+                  <label for="message-file-upload" class="attachment-btn">
+                    <i class="fas fa-paperclip"></i>
+                  </label>
+                  <input type="file" id="message-file-upload" name="attachments" multiple style="display: none;" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv">
+                  <button type="button" onclick="sendMessage()">
+                    <i class="fas fa-paper-plane"></i>
+                  </button>
+                </div>
+              </div>
+            </form>
           </div>
         </div>
       </div>
@@ -466,25 +539,34 @@
   function sendMessage() {
     const messageInput = document.getElementById('message-input');
     const message = messageInput.value.trim();
+    const fileInput = document.getElementById('message-file-upload');
     
-    if (!message) return;
+    // Check if there's a message or files
+    if (!message && fileInput.files.length === 0) return;
+    
+    // Create FormData to handle files
+    const formData = new FormData();
+    formData.append('message', message);
+    formData.append('ticketId', '<%= ticket._id %>');
+    
+    // Add files if any
+    if (fileInput.files.length > 0) {
+      for (let i = 0; i < fileInput.files.length; i++) {
+        formData.append('attachments', fileInput.files[i]);
+      }
+    }
     
     fetch('/chat/send', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        message,
-        recipientId: '<%= ticket.user._id %>',
-        ticketId: '<%= ticket._id %>'
-      })
+      body: formData
     })
       .then(response => response.json())
       .then(data => {
         if (data.success) {
           // Clear input
           messageInput.value = '';
+          fileInput.value = '';
+          clearMessageAttachmentsPreviews();
           
           // Add message to UI (will be handled by socket event)
         } else {
@@ -503,6 +585,359 @@
           alert('An error occurred while sending the message');
         }
       });
+  }
+  
+  // File upload preview for messages
+  document.getElementById('message-file-upload').addEventListener('change', function(e) {
+    const files = e.target.files;
+    const previewContainer = document.getElementById('message-attachments-preview');
+    
+    clearMessageAttachmentsPreviews();
+    
+    if (files.length > 0) {
+      previewContainer.style.display = 'flex';
+      
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const previewItem = document.createElement('div');
+        previewItem.className = 'attachment-preview';
+        
+        if (file.type.startsWith('image/')) {
+          const img = document.createElement('img');
+          img.src = URL.createObjectURL(file);
+          previewItem.appendChild(img);
+        } else {
+          const icon = document.createElement('i');
+          icon.className = getFileIcon(file.type);
+          previewItem.appendChild(icon);
+        }
+        
+        const fileName = document.createElement('span');
+        fileName.textContent = file.name.length > 15 ? file.name.substring(0, 12) + '...' : file.name;
+        fileName.className = 'file-name';
+        previewItem.appendChild(fileName);
+        
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'remove-attachment';
+        removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+        removeBtn.setAttribute('data-index', i);
+        removeBtn.onclick = function() {
+          // Create a new FileList without this file
+          const dt = new DataTransfer();
+          const input = document.getElementById('message-file-upload');
+          
+          for (let j = 0; j < input.files.length; j++) {
+            if (j !== parseInt(this.getAttribute('data-index'))) {
+              dt.items.add(input.files[j]);
+            }
+          }
+          
+          input.files = dt.files;
+          
+          // Update preview
+          if (input.files.length === 0) {
+            clearMessageAttachmentsPreviews();
+          } else {
+            this.parentElement.remove();
+          }
+        };
+        
+        previewItem.appendChild(removeBtn);
+        previewContainer.appendChild(previewItem);
+      }
+    }
+  });
+  
+  function clearMessageAttachmentsPreviews() {
+    const previewContainer = document.getElementById('message-attachments-preview');
+    previewContainer.innerHTML = '';
+    previewContainer.style.display = 'none';
+  }
+  
+  // Handle attachments in ticket
+  document.getElementById('ticket-new-attachments').addEventListener('change', function() {
+    const previewContainer = document.getElementById('new-attachments-preview');
+    previewContainer.innerHTML = '';
+    
+    if (this.files.length > 0) {
+      previewContainer.style.display = 'flex';
+      document.getElementById('upload-attachments-btn').style.display = 'inline-block';
+      
+      for (let i = 0; i < this.files.length; i++) {
+        const file = this.files[i];
+        const previewItem = document.createElement('div');
+        previewItem.className = 'attachment-preview-item';
+        
+        // Add icon or image preview
+        if (file.type.startsWith('image/')) {
+          const img = document.createElement('img');
+          img.src = URL.createObjectURL(file);
+          img.className = 'attachment-thumbnail';
+          previewItem.appendChild(img);
+        } else {
+          const icon = document.createElement('i');
+          icon.className = getFileIcon(file.type);
+          previewItem.appendChild(icon);
+        }
+        
+        // Add file name
+        const fileName = document.createElement('span');
+        fileName.className = 'attachment-filename';
+        fileName.textContent = file.name.length > 20 ? file.name.substring(0, 17) + '...' : file.name;
+        previewItem.appendChild(fileName);
+        
+        // Add remove button
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'attachment-remove';
+        removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+        removeBtn.dataset.index = i;
+        
+        removeBtn.addEventListener('click', function() {
+          // Create a new FileList without this file
+          const dt = new DataTransfer();
+          const input = document.getElementById('ticket-new-attachments');
+          
+          for (let j = 0; j < input.files.length; j++) {
+            if (j !== parseInt(this.dataset.index)) {
+              dt.items.add(input.files[j]);
+            }
+          }
+          
+          input.files = dt.files;
+          
+          // Update preview
+          if (input.files.length === 0) {
+            previewContainer.innerHTML = '';
+            previewContainer.style.display = 'none';
+            document.getElementById('upload-attachments-btn').style.display = 'none';
+          } else {
+            this.parentElement.remove();
+            
+            // Update indices for remaining remove buttons
+            const remainingButtons = previewContainer.querySelectorAll('.attachment-remove');
+            remainingButtons.forEach((btn, idx) => {
+              btn.dataset.index = idx;
+            });
+          }
+        });
+        
+        previewItem.appendChild(removeBtn);
+        previewContainer.appendChild(previewItem);
+      }
+    } else {
+      previewContainer.style.display = 'none';
+      document.getElementById('upload-attachments-btn').style.display = 'none';
+    }
+  });
+  
+  // Upload new attachments to ticket
+  document.getElementById('add-attachment-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const fileInput = document.getElementById('ticket-new-attachments');
+    if (fileInput.files.length === 0) return;
+    
+    const formData = new FormData();
+    
+    for (let i = 0; i < fileInput.files.length; i++) {
+      formData.append('attachments', fileInput.files[i]);
+    }
+    
+    // Show loading state
+    const uploadBtn = document.getElementById('upload-attachments-btn');
+    const originalBtnText = uploadBtn.innerHTML;
+    uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+    uploadBtn.disabled = true;
+    
+    fetch('/tickets/<%= ticket._id %>/attachments', {
+      method: 'POST',
+      body: formData
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          if (window.notifications) {
+            window.notifications.success('Attachments uploaded successfully');
+          }
+          
+          // Reset form
+          fileInput.value = '';
+          document.getElementById('new-attachments-preview').innerHTML = '';
+          document.getElementById('new-attachments-preview').style.display = 'none';
+          uploadBtn.style.display = 'none';
+          
+          // Refresh page to show new attachments
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
+        } else {
+          uploadBtn.innerHTML = originalBtnText;
+          uploadBtn.disabled = false;
+          
+          if (window.notifications) {
+            window.notifications.error(data.message, 'Error');
+          } else {
+            alert('Failed to upload attachments: ' + data.message);
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Error uploading attachments:', error);
+        uploadBtn.innerHTML = originalBtnText;
+        uploadBtn.disabled = false;
+        
+        if (window.notifications) {
+          window.notifications.error('An error occurred during upload', 'Error');
+        } else {
+          alert('An error occurred while uploading attachments');
+        }
+      });
+  });
+  
+  // Delete attachment
+  const deleteButtons = document.querySelectorAll('.delete-attachment');
+  deleteButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      if (confirm('Are you sure you want to delete this attachment?')) {
+        const attachmentId = this.getAttribute('data-id');
+        
+        fetch(`/tickets/<%= ticket._id %>/attachments/${attachmentId}`, {
+          method: 'DELETE'
+        })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              if (window.notifications) {
+                window.notifications.success('Attachment deleted successfully');
+              }
+              
+              // Remove attachment from UI
+              this.closest('.attachment-item').remove();
+              
+              // Check if there are no more attachments
+              const attachmentsList = document.querySelector('.attachments-list');
+              if (!attachmentsList.children.length) {
+                attachmentsList.innerHTML = '<div class="empty-attachments"><p>No attachments for this ticket.</p></div>';
+              }
+            } else {
+              if (window.notifications) {
+                window.notifications.error(data.message, 'Error');
+              } else {
+                alert('Failed to delete attachment: ' + data.message);
+              }
+            }
+          })
+          .catch(error => {
+            console.error('Error deleting attachment:', error);
+            if (window.notifications) {
+              window.notifications.error('An error occurred', 'Error');
+            } else {
+              alert('An error occurred while deleting the attachment');
+            }
+          });
+      }
+    });
+  });
+  
+  function appendMessage(data) {
+    const messageContainer = document.getElementById('ticket-messages');
+    const isCurrentUser = data.sender.id === '<%= user._id %>';
+    
+    if (data.isSystem) {
+      const systemMessageHTML = `
+        <div class="message">
+          <div class="system-message">
+            <div class="system-icon">
+              <i class="fas fa-info-circle"></i>
+            </div>
+            <div class="system-content">
+              ${data.message}
+            </div>
+            <div class="message-time">
+              ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </div>
+          </div>
+        </div>
+      `;
+      
+      messageContainer.innerHTML += systemMessageHTML;
+    } else {
+      let attachmentsHTML = '';
+      if (data.attachments && data.attachments.length > 0) {
+        attachmentsHTML = '<div class="message-attachments">';
+        data.attachments.forEach(attachment => {
+          if (isImageFile(attachment.mimetype)) {
+            attachmentsHTML += `
+              <div class="attachment-item image">
+                <a href="/${attachment.path}" target="_blank">
+                  <img src="/${attachment.path}" alt="${attachment.originalname}">
+                </a>
+              </div>
+            `;
+          } else {
+            attachmentsHTML += `
+              <div class="attachment-item file">
+                <a href="/${attachment.path}" target="_blank" class="file-attachment">
+                  <i class="${getFileIcon(attachment.mimetype)}"></i>
+                  <span>${attachment.originalname}</span>
+                </a>
+              </div>
+            `;
+          }
+        });
+        attachmentsHTML += '</div>';
+      }
+      
+      const messageHTML = `
+        <div class="message ${isCurrentUser ? 'outgoing' : 'incoming'}">
+          <div class="message-avatar">
+            ${isCurrentUser ? '<%= user.name.charAt(0).toUpperCase() %>' : data.sender.name.charAt(0).toUpperCase()}
+          </div>
+          <div class="message-content">
+            <div class="message-sender">
+              ${data.sender.name}
+              ${data.sender.role === 'admin' || data.sender.role === 'head_admin' ? 
+                '<span class="badge admin-badge">Admin</span>' : ''}
+            </div>
+            <div class="message-bubble">
+              ${data.message}
+            </div>
+            ${attachmentsHTML}
+            <div class="message-time">
+              ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </div>
+          </div>
+        </div>
+      `;
+      
+      messageContainer.innerHTML += messageHTML;
+    }
+  }
+  
+  function getFileIcon(mimetype) {
+    if (mimetype.startsWith('image/')) return 'fas fa-file-image';
+    if (mimetype === 'application/pdf') return 'fas fa-file-pdf';
+    if (mimetype.includes('word')) return 'fas fa-file-word';
+    if (mimetype.includes('excel') || mimetype.includes('spreadsheet')) return 'fas fa-file-excel';
+    if (mimetype.includes('powerpoint') || mimetype.includes('presentation')) return 'fas fa-file-powerpoint';
+    if (mimetype.includes('text/')) return 'fas fa-file-alt';
+    return 'fas fa-file';
+  }
+  
+  function isImageFile(mimetype) {
+    return mimetype && mimetype.startsWith('image/');
+  }
+  
+  // Helper for EJS template
+  function getFileIconClass(mimetype) {
+    return getFileIcon(mimetype);
+  }
+  
+  function formatFileSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+    else return (bytes / 1048576).toFixed(1) + ' MB';
   }
   
   function updateTicketStatus() {

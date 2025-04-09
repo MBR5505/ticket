@@ -1,5 +1,32 @@
 const mongoose = require('mongoose');
 
+const AttachmentSchema = new mongoose.Schema({
+  filename: {
+    type: String,
+    required: true
+  },
+  originalname: {
+    type: String,
+    required: true
+  },
+  mimetype: {
+    type: String,
+    required: true
+  },
+  size: {
+    type: Number,
+    required: true
+  },
+  path: {
+    type: String,
+    required: true
+  },
+  uploadedAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
 const MessageSchema = new mongoose.Schema({
   content: {
     type: String,
@@ -32,7 +59,8 @@ const MessageSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now
-  }
+  },
+  attachments: [AttachmentSchema]
 });
 
 // Index to speed up common queries

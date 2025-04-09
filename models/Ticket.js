@@ -1,5 +1,36 @@
 const mongoose = require('mongoose');
 
+const AttachmentSchema = new mongoose.Schema({
+  filename: {
+    type: String,
+    required: true
+  },
+  originalname: {
+    type: String,
+    required: true
+  },
+  mimetype: {
+    type: String,
+    required: true
+  },
+  size: {
+    type: Number,
+    required: true
+  },
+  path: {
+    type: String,
+    required: true
+  },
+  uploadedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  uploadedAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
 const TicketSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -63,6 +94,7 @@ const TicketSchema = new mongoose.Schema({
       default: ''
     }
   },
+  attachments: [AttachmentSchema],
   createdAt: {
     type: Date,
     default: Date.now

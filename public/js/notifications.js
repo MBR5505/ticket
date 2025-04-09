@@ -1,131 +1,112 @@
 /**
- * Notification System
- * This module provides functions to show toast notifications across the application
+ * Notifications JavaScript
+ * Handles client-side notification functionality
  */
 
-class NotificationSystem {
-  constructor() {
-    this.container = null;
-    this.init();
+// Initialize the notifications system
+(function() {
+  // Create notification center if it doesn't exist
+  let notificationCenter = document.querySelector('.notification-center');
+  
+  if (!notificationCenter) {
+    notificationCenter = document.createElement('div');
+    notificationCenter.className = 'notification-center';
+    document.body.appendChild(notificationCenter);
   }
   
-  init() {
-    // Create notification container if it doesn't exist
-    if (!document.querySelector('.notification-center')) {
-      this.container = document.createElement('div');
-      this.container.className = 'notification-center';
-      document.body.appendChild(this.container);
-    } else {
-      this.container = document.querySelector('.notification-center');
+  // Notification types
+  const types = {
+    success: {
+      icon: 'fas fa-check-circle',
+      color: 'var(--success-color, #2ecc71)'
+    },
+    error: {
+      icon: 'fas fa-exclamation-circle',
+      color: 'var(--danger-color, #e74c3c)'
+    },
+    warning: {
+      icon: 'fas fa-exclamation-triangle',
+      color: 'var(--warning-color, #f39c12)'
+    },
+    info: {
+      icon: 'fas fa-info-circle',
+      color: 'var(--info-color, #3498db)'
     }
-  }
+  };
   
-  /**
-   * Show a notification
-   * @param {string} message - The notification message
-   * @param {string} type - Type of notification: success, info, warning, error
-   * @param {string} title - Optional title for the notification
-   * @param {number} duration - How long to show the notification in ms (0 = don't auto-close)
-   */
-  show(message, type = 'info', title = '', duration = 5000) {
+  // Create a notification
+  function createNotification(message, title, type = 'info', duration = 5000) {
+    // Create notification element
     const notification = document.createElement('div');
     notification.className = `notification ${type}`;
+    notification.style.borderLeftColor = types[type].color;
     
-    let iconClass = '';
-    switch (type) {
-      case 'success':
-        iconClass = 'fa-check-circle';
-        title = title || 'Success';
-        break;
-      case 'warning':
-        iconClass = 'fa-exclamation-triangle';
-        title = title || 'Warning';
-        break;
-      case 'error':
-        iconClass = 'fa-times-circle';
-        title = title || 'Error';
-        break;
-      default: // info
-        iconClass = 'fa-info-circle';
-        title = title || 'Information';
-    }
-    
+    // Create notification content
     notification.innerHTML = `
       <div class="notification-icon">
-        <i class="fas ${iconClass}"></i>
+        <i class="${types[type].icon}" style="color: ${types[type].color}"></i>
       </div>
       <div class="notification-content">
-        <div class="notification-title">${title}</div>
-        <div class="notification-message">${message}</div>
+        ${title ? `<h4 class="notification-title">${title}</h4>` : ''}
+        <p class="notification-message">${message}</p>
       </div>
       <button class="notification-close">
         <i class="fas fa-times"></i>
       </button>
     `;
     
-    // Add to container
-    this.container.appendChild(notification);
-    
     // Add event listener to close button
-    const closeBtn = notification.querySelector('.notification-close');
-    closeBtn.addEventListener('click', () => this.close(notification));
+    notification.querySelector('.notification-close').addEventListener('click', function() {
+      removeNotification(notification);
+    });
     
-    // Auto-close after duration (if not 0)
+    // Add to notification center
+    notificationCenter.appendChild(notification);
+    
+    // Show notification with animation
+    setTimeout(() => {
+      notification.classList.add('show');
+    }, 10);
+    
+    // Auto-remove after duration
     if (duration > 0) {
       setTimeout(() => {
-        if (notification.parentNode) {
-          this.close(notification);
-        }
+        removeNotification(notification);
       }, duration);
     }
     
     return notification;
   }
   
-  /**
-   * Close a notification
-   * @param {HTMLElement} notification - The notification element to close
-   */
-  close(notification) {
-    notification.classList.add('closing');
+  // Remove a notification
+  function removeNotification(notification) {
+    notification.classList.remove('show');
+    notification.classList.add('hide');
+    
+    // Remove from DOM after animation
     setTimeout(() => {
       if (notification.parentNode) {
         notification.parentNode.removeChild(notification);
       }
-    }, 300); // Match the animation duration
+    }, 300);
   }
   
-  /**
-   * Success notification shorthand
-   */
-  success(message, title = 'Success', duration = 5000) {
-    return this.show(message, 'success', title, duration);
-  }
+  // Create helper functions for each notification type
+  const notifications = {
+    success: function(message, title, duration) {
+      return createNotification(message, title, 'success', duration);
+    },
+    error: function(message, title, duration) {
+      return createNotification(message, title, 'error', duration);
+    },
+    warning: function(message, title, duration) {
+      return createNotification(message, title, 'warning', duration);
+    },
+    info: function(message, title, duration) {
+      return createNotification(message, title, 'info', duration);
+    }
+  };
   
-  /**
-   * Info notification shorthand
-   */
-  info(message, title = 'Information', duration = 5000) {
-    return this.show(message, 'info', title, duration);
-  }
-  
-  /**
-   * Warning notification shorthand
-   */
-  warning(message, title = 'Warning', duration = 5000) {
-    return this.show(message, 'warning', title, duration);
-  }
-  
-  /**
-   * Error notification shorthand
-   */
-  error(message, title = 'Error', duration = 5000) {
-    return this.show(message, 'error', title, duration);
-  }
-}
-
-// Create and export a singleton instance
-const notifications = new NotificationSystem();
-
-// Add to window to make globally available
-window.notifications = notifications;
+  // Make available globally
+  window.notifications = notifications;
+})();

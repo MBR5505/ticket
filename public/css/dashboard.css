@@ -1048,3 +1048,354 @@
     height: 50vh;
   }
 }
+
+/* Add these styles to the end of your existing dashboard.css file */
+
+/* File Upload Styles */
+.file-upload-container {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+}
+
+.file-upload-button {
+  display: inline-flex;
+  align-items: center;
+  background-color: #f8f9fa;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.file-upload-button:hover {
+  background-color: #e9ecef;
+}
+
+.file-upload-button i {
+  margin-right: 8px;
+  color: var(--gray-color);
+}
+
+.file-upload-button input[type="file"] {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.file-upload-limit {
+  font-size: 12px;
+  color: var(--gray-color);
+  margin-top: 5px;
+}
+
+/* Attachment Previews */
+.attachments-preview-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+  margin-bottom: 15px;
+  display: none;
+}
+
+.attachment-preview-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  width: 100px;
+  height: 120px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  overflow: hidden;
+  background-color: #f8f9fa;
+}
+
+.attachment-preview-item img.attachment-thumbnail {
+  width: 100%;
+  height: 70px;
+  object-fit: cover;
+}
+
+.attachment-preview-item i {
+  font-size: 32px;
+  color: var(--gray-color);
+  margin-top: 20px;
+}
+
+.attachment-filename {
+  font-size: 12px;
+  text-align: center;
+  padding: 5px;
+  word-break: break-word;
+}
+
+.attachment-remove {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background-color: rgba(255, 255, 255, 0.8);
+  border: none;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--danger-color);
+  font-size: 12px;
+  padding: 0;
+}
+
+.attachment-remove:hover {
+  background-color: rgba(255, 255, 255, 1);
+}
+
+/* Chat Attachments */
+.attachments-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+  display: none;
+}
+
+.attachment-preview {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  border-radius: 4px;
+  overflow: hidden;
+  background-color: #f8f9fa;
+  border: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.attachment-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.attachment-preview i {
+  font-size: 24px;
+  color: var(--gray-color);
+}
+
+.attachment-preview .file-name {
+  font-size: 10px;
+  margin-top: 3px;
+  text-align: center;
+  padding: 0 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.attachment-preview .remove-attachment {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background-color: rgba(255, 255, 255, 0.8);
+  border: none;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--danger-color);
+  font-size: 10px;
+  padding: 0;
+}
+
+.message-input-container {
+  display: flex;
+  width: 100%;
+}
+
+.chat-actions {
+  display: flex;
+  align-items: center;
+}
+
+.attachment-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  color: var(--gray-color);
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.attachment-btn:hover {
+  color: var(--primary-color);
+}
+
+/* Message Attachments */
+.message-attachments {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.message-attachments .attachment-item.image {
+  width: 150px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.message-attachments .attachment-item.image img {
+  width: 100%;
+  height: auto;
+  border-radius: 4px;
+  transition: transform 0.2s;
+}
+
+.message-attachments .attachment-item.image img:hover {
+  transform: scale(1.05);
+}
+
+.message-attachments .attachment-item.file {
+  width: 100%;
+}
+
+.message-attachments .file-attachment {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+  color: var(--dark-color);
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+
+.message-attachments .file-attachment:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.message-attachments .file-attachment i {
+  margin-right: 8px;
+  font-size: 16px;
+  color: var(--primary-color);
+}
+
+/* Ticket Attachments */
+.ticket-attachments {
+  margin-top: 20px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 20px;
+}
+
+.ticket-attachments h4 {
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+}
+
+.ticket-attachments h4 i {
+  margin-right: 8px;
+}
+
+.attachments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.attachment-item {
+  display: flex;
+  align-items: flex-start;
+  background-color: #f8f9fa;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 10px;
+}
+
+.attachment-item .attachment-preview {
+  width: 80px;
+  height: 80px;
+  margin-right: 10px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 4px;
+}
+
+.attachment-item .attachment-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.attachment-details {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.attachment-icon {
+  width: 40px;
+  height: 40px;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 10px;
+}
+
+.attachment-icon i {
+  font-size: 20px;
+  color: var(--primary-color);
+}
+
+.attachment-info {
+  flex: 1;
+}
+
+.attachment-filename {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 5px;
+  color: var(--dark-color);
+  text-decoration: none;
+}
+
+.attachment-filename:hover {
+  text-decoration: underline;
+}
+
+.attachment-meta {
+  font-size: 12px;
+  color: var(--gray-color);
+}
+
+.empty-attachments {
+  padding: 20px;
+  text-align: center;
+  color: var(--gray-color);
+  background-color: #f8f9fa;
+  border-radius: 4px;
+}
+
+.add-attachment-section {
+  margin-top: 15px;
+}

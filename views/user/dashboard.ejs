@@ -293,7 +293,7 @@
     </div>
     <div class="third-panel-content">
       <div id="new-ticket-panel">
-        <form action="/tickets/create" method="POST" class="ticket-form">
+        <form action="/tickets/create" method="POST" class="ticket-form" enctype="multipart/form-data">
           <div class="form-group">
             <label for="title">Title</label>
             <input type="text" id="title" name="title" placeholder="Brief summary of your issue" required>
@@ -320,6 +320,18 @@
           <div class="form-group">
             <label for="description">Description</label>
             <textarea id="description" name="description" rows="8" placeholder="Please provide details about your issue..." required></textarea>
+          </div>
+          <div class="form-group">
+            <label for="ticket-attachments">Attachments (Optional)</label>
+            <div class="file-upload-container">
+              <div class="file-upload-button">
+                <i class="fas fa-paperclip"></i>
+                <span>Choose files</span>
+                <input type="file" id="ticket-attachments" name="attachments" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv">
+              </div>
+              <div class="file-upload-limit">Max 5 files, 5MB each</div>
+            </div>
+            <div id="attachments-preview" class="attachments-preview-container"></div>
           </div>
           <button type="submit" class="btn btn-primary btn-block">Submit Ticket</button>
         </form>
@@ -366,5 +378,91 @@
         }
       });
     }
+    
+    // Attachment preview for ticket creation
+    const attachmentInput = document.getElementById('ticket-attachments');
+    if (attachmentInput) {
+      attachmentInput.addEventListener('change', function() {
+        const previewContainer = document.getElementById('attachments-preview');
+        previewContainer.innerHTML = '';
+        
+        if (this.files.length > 0) {
+          previewContainer.style.display = 'flex';
+          
+          for (let i = 0; i < this.files.length; i++) {
+            const file = this.files[i];
+            const previewItem = document.createElement('div');
+            previewItem.className = 'attachment-preview-item';
+            
+            // Add icon or image preview
+            if (file.type.startsWith('image/')) {
+              const img = document.createElement('img');
+              img.src = URL.createObjectURL(file);
+              img.className = 'attachment-thumbnail';
+              previewItem.appendChild(img);
+            } else {
+              const icon = document.createElement('i');
+              icon.className = getFileIcon(file.type);
+              previewItem.appendChild(icon);
+            }
+            
+            // Add file name
+            const fileName = document.createElement('span');
+            fileName.className = 'attachment-filename';
+            fileName.textContent = file.name.length > 20 ? file.name.substring(0, 17) + '...' : file.name;
+            previewItem.appendChild(fileName);
+            
+            // Add remove button
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'attachment-remove';
+            removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+            removeBtn.dataset.index = i;
+            
+            removeBtn.addEventListener('click', function() {
+              // Create a new FileList without this file
+              const dt = new DataTransfer();
+              
+              for (let j = 0; j < attachmentInput.files.length; j++) {
+                if (j !== parseInt(this.dataset.index)) {
+                  dt.items.add(attachmentInput.files[j]);
+                }
+              }
+              
+              attachmentInput.files = dt.files;
+              
+              // Update preview
+              if (attachmentInput.files.length === 0) {
+                previewContainer.innerHTML = '';
+                previewContainer.style.display = 'none';
+              } else {
+                this.parentElement.remove();
+                
+                // Update indices for remaining remove buttons
+                const remainingButtons = previewContainer.querySelectorAll('.attachment-remove');
+                remainingButtons.forEach((btn, idx) => {
+                  btn.dataset.index = idx;
+                });
+              }
+            });
+            
+            previewItem.appendChild(removeBtn);
+            previewContainer.appendChild(previewItem);
+          }
+        } else {
+          previewContainer.style.display = 'none';
+        }
+      });
+    }
   });
+  
+  function getFileIcon(mimetype) {
+    if (mimetype.startsWith('image/')) return 'fas fa-file-image';
+    if (mimetype === 'application/pdf') return 'fas fa-file-pdf';
+    if (mimetype.includes('word')) return 'fas fa-file-word';
+    if (mimetype.includes('excel') || mimetype.includes('spreadsheet')) return 'fas fa-file-excel';
+    if (mimetype.includes('powerpoint') || mimetype.includes('presentation')) return 'fas fa-file-powerpoint';
+    if (mimetype.includes('text/')) return 'fas fa-file-alt';
+    return 'fas fa-file';
+  }
 </script>
