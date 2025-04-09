@@ -46,57 +46,73 @@
   
   <!-- Main Content -->
   <div class="main-content">
-    <!-- Settings Panel -->
+    <!-- Left Panel (Account Settings) -->
     <div class="panel left-panel">
       <div class="panel-header">
-        <h2>Account Settings</h2>
+        <h2>Kontoinnstillinger</h2>
       </div>
       <div class="panel-content">
         <div class="settings-container">
-          <!-- Profile Settings -->
-          <div class="settings-section">
-            <h3>Profile Information</h3>
-            <div class="section-content">
-              <form action="/user/settings/update" method="POST" class="settings-form">
-                <div class="form-group">
-                  <label for="name">Full Name</label>
+          <form action="/user/settings/update" method="POST" id="account-settings-form">
+            <div class="settings-section">
+              <h3>Profilinformasjon</h3>
+              <div class="form-group">
+                <label for="name">Navn</label>
+                <div class="input-with-icon">
+                  <i class="fas fa-user"></i>
                   <input type="text" id="name" name="name" value="<%= user.name %>" required>
                 </div>
-                
-                <div class="form-group">
-                  <label for="email">Email Address</label>
+              </div>
+              
+              <div class="form-group">
+                <label for="email">E-postadresse</label>
+                <div class="input-with-icon">
+                  <i class="fas fa-envelope"></i>
                   <input type="email" id="email" name="email" value="<%= user.email %>" required>
                 </div>
-                
-                <button type="submit" class="btn btn-primary">Save Changes</button>
-              </form>
+              </div>
             </div>
-          </div>
-          
-          <!-- Change Password -->
-          <div class="settings-section">
-            <h3>Change Password</h3>
-            <div class="section-content">
-              <form action="/user/settings/password" method="POST" class="settings-form">
-                <div class="form-group">
-                  <label for="currentPassword">Current Password</label>
-                  <input type="password" id="currentPassword" name="currentPassword" required>
-                </div>
+            
+            <div class="settings-section">
+              <h3>Temainnstillinger</h3>
+              <div class="theme-options">
+                <label class="theme-option light <%= user.preferences && user.preferences.theme === 'light' ? 'active' : '' %>">
+                  <input type="radio" name="theme" value="light" <%= user.preferences && user.preferences.theme === 'light' ? 'checked' : '' %>>
+                  <div class="theme-preview">
+                    <div class="theme-header"></div>
+                    <div class="theme-content"></div>
+                  </div>
+                  <span>Lyst tema</span>
+                </label>
                 
-                <div class="form-group">
-                  <label for="newPassword">New Password</label>
-                  <input type="password" id="newPassword" name="newPassword" minlength="6" required>
-                </div>
-                
-                <div class="form-group">
-                  <label for="confirmPassword">Confirm New Password</label>
-                  <input type="password" id="confirmPassword" name="confirmPassword" minlength="6" required>
-                </div>
-                
-                <button type="submit" class="btn btn-primary">Change Password</button>
-              </form>
+                <label class="theme-option dark <%= user.preferences && user.preferences.theme === 'dark' ? 'active' : '' %>">
+                  <input type="radio" name="theme" value="dark" <%= user.preferences && user.preferences.theme === 'dark' ? 'checked' : '' %>>
+                  <div class="theme-preview">
+                    <div class="theme-header"></div>
+                    <div class="theme-content"></div>
+                  </div>
+                  <span>Mørkt tema</span>
+                </label>
+              </div>
             </div>
-          </div>
+            
+            <div class="settings-section">
+              <h3>Varslingsinnstillinger</h3>
+              <div class="form-group">
+                <label class="toggle-switch">
+                  <input type="checkbox" name="notifications" <%= user.preferences && user.preferences.notifications ? 'checked' : '' %>>
+                  <span class="toggle-slider"></span>
+                  <span class="toggle-label">Aktiver e-postvarsler</span>
+                </label>
+                <p class="input-hint">Motta varslinger via e-post når en sak oppdateres eller en ny melding mottas</p>
+              </div>
+            </div>
+            
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary">Lagre endringer</button>
+              <button type="reset" class="btn btn-secondary">Tilbakestill</button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
@@ -106,188 +122,292 @@
       <span class="divider-icon">⋮⋮</span>
     </div>
     
-    <!-- Right Panel (Preferences) -->
+    <!-- Right Panel (Password Change & Danger Zone) -->
     <div class="panel right-panel">
       <div class="panel-header">
-        <h2>Display Preferences</h2>
+        <h2>Sikkerhet</h2>
       </div>
       <div class="panel-content">
         <div class="settings-container">
-          <!-- Theme Settings -->
           <div class="settings-section">
-            <h3>Theme</h3>
-            <div class="section-content">
-              <form action="/user/settings/update" method="POST" class="settings-form">
-                <div class="theme-selector">
-                  <div class="theme-option">
-                    <input type="radio" id="theme-light" name="theme" value="light" 
-                           <%= !user.preferences || user.preferences.theme === 'light' ? 'checked' : '' %>>
-                    <label for="theme-light" class="theme-label light-theme">
-                      <div class="theme-preview"></div>
-                      <span>Light</span>
-                    </label>
-                  </div>
-                  
-                  <div class="theme-option">
-                    <input type="radio" id="theme-dark" name="theme" value="dark" 
-                           <%= user.preferences && user.preferences.theme === 'dark' ? 'checked' : '' %>>
-                    <label for="theme-dark" class="theme-label dark-theme">
-                      <div class="theme-preview"></div>
-                      <span>Dark</span>
-                    </label>
-                  </div>
+            <h3>Endre passord</h3>
+            <form action="/user/settings/password" method="POST" id="password-form">
+              <div class="form-group">
+                <label for="current-password">Nåværende passord</label>
+                <div class="input-with-icon">
+                  <i class="fas fa-lock"></i>
+                  <input type="password" id="current-password" name="currentPassword" required>
                 </div>
-                
-                <button type="submit" class="btn btn-primary">Save Theme</button>
-              </form>
-            </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="new-password">Nytt passord</label>
+                <div class="input-with-icon">
+                  <i class="fas fa-key"></i>
+                  <input type="password" id="new-password" name="newPassword" required>
+                </div>
+                <div class="password-strength-meter">
+                  <div class="strength-bar"></div>
+                  <span class="strength-text">Passordstyrke</span>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="confirm-password">Bekreft nytt passord</label>
+                <div class="input-with-icon">
+                  <i class="fas fa-check-circle"></i>
+                  <input type="password" id="confirm-password" name="confirmPassword" required>
+                </div>
+              </div>
+              
+              <div class="password-requirements">
+                <h4>Passordet må:</h4>
+                <ul>
+                  <li id="req-length">Være minst 8 tegn langt</li>
+                  <li id="req-uppercase">Inneholde minst én stor bokstav</li>
+                  <li id="req-lowercase">Inneholde minst én liten bokstav</li>
+                  <li id="req-number">Inneholde minst ett tall</li>
+                  <li id="req-special">Inneholde minst ett spesialtegn</li>
+                </ul>
+              </div>
+              
+              <button type="submit" class="btn btn-primary">Oppdater passord</button>
+            </form>
           </div>
           
-          <!-- Notification Settings -->
-          <div class="settings-section">
-            <h3>Notifications</h3>
-            <div class="section-content">
-              <form action="/user/settings/update" method="POST" class="settings-form">
-                <div class="form-group checkbox-group">
-                  <label class="checkbox-container">
-                    Email notifications
-                    <input type="checkbox" name="emailNotifications" 
-                           <%= !user.preferences || (user.preferences.notifications && user.preferences.notifications.email) ? 'checked' : '' %>>
-                    <span class="checkmark"></span>
-                  </label>
-                  <p class="help-text">Receive ticket updates and notifications via email</p>
-                </div>
-                
-                <div class="form-group checkbox-group">
-                  <label class="checkbox-container">
-                    Browser notifications
-                    <input type="checkbox" name="pushNotifications" 
-                           <%= !user.preferences || (user.preferences.notifications && user.preferences.notifications.push) ? 'checked' : '' %>>
-                    <span class="checkmark"></span>
-                  </label>
-                  <p class="help-text">Receive browser notifications for ticket updates</p>
-                </div>
-                
-                <button type="submit" class="btn btn-primary">Save Notification Settings</button>
-              </form>
-            </div>
-          </div>
-          
-          <!-- Layout Settings -->
-          <div class="settings-section">
-            <h3>Layout Preferences</h3>
-            <div class="section-content">
-              <form action="/user/settings/update" method="POST" class="settings-form">
-                <div class="form-group">
-                  <label>Chat Position</label>
-                  <div class="radio-group">
-                    <label class="radio-container">
-                      Middle (split view)
-                      <input type="radio" name="chatPosition" value="middle" 
-                             <%= user.preferences && user.preferences.layout && user.preferences.layout.chatPosition === 'middle' ? 'checked' : '' %>>
-                      <span class="radio-mark"></span>
-                    </label>
-                    
-                    <label class="radio-container">
-                      Right (regular)
-                      <input type="radio" name="chatPosition" value="right" 
-                             <%= !user.preferences || !user.preferences.layout || user.preferences.layout.chatPosition === 'right' ? 'checked' : '' %>>
-                      <span class="radio-mark"></span>
-                    </label>
-                  </div>
-                </div>
-                
-                <button type="submit" class="btn btn-primary">Save Layout</button>
-              </form>
+          <div class="settings-section danger-zone">
+            <h3>Faresone</h3>
+            <p>Handlinger i denne seksjonen kan ikke angres.</p>
+            
+            <div class="danger-action">
+              <button id="delete-account-btn" class="btn btn-danger">Slett konto</button>
+              <p>Permanent sletting av kontoen din og all tilhørende data.</p>
             </div>
           </div>
         </div>
       </div>
     </div>
   </div>
-  
-  <!-- Third Panel (for new ticket) -->
-  <div class="third-panel">
-    <div class="third-panel-header">
-      <h3 class="panel-title">Create New Ticket</h3>
-      <div class="close-panel">
-        <i class="fas fa-times"></i>
+</div>
+
+<!-- Delete Account Confirmation Modal -->
+<div id="delete-modal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h2>Bekreft sletting av konto</h2>
+    <p class="warning-text">
+      <i class="fas fa-exclamation-triangle"></i>
+      Dette er en permanent handling og kan ikke angres. Alle data tilknyttet kontoen din vil bli slettet.
+    </p>
+    <form id="delete-account-form" action="/user/settings/delete" method="POST">
+      <div class="form-group">
+        <label for="delete-password">Skriv inn passordet ditt for å bekrefte</label>
+        <input type="password" id="delete-password" name="password" required>
       </div>
-    </div>
-    <div class="third-panel-content">
-      <div id="new-ticket-panel">
-        <form action="/tickets/create" method="POST" class="ticket-form">
-          <div class="form-group">
-            <label for="title">Title</label>
-            <input type="text" id="title" name="title" placeholder="Brief summary of your issue" required>
-          </div>
-          
-          <div class="form-group">
-            <label for="category">Category</label>
-            <select id="category" name="category" required>
-              <option value="">Select a category</option>
-              <option value="technical">Technical Issue</option>
-              <option value="account">Account Problem</option>
-              <option value="billing">Billing Question</option>
-              <option value="feature">Feature Request</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-          
-          <div class="form-group">
-            <label for="priority">Priority</label>
-            <select id="priority" name="priority">
-              <option value="low">Low</option>
-              <option value="medium" selected>Medium</option>
-              <option value="high">High</option>
-            </select>
-          </div>
-          
-          <div class="form-group">
-            <label for="description">Description</label>
-            <textarea id="description" name="description" rows="8" placeholder="Please provide details about your issue..." required></textarea>
-          </div>
-          
-          <button type="submit" class="btn btn-primary btn-block">Submit Ticket</button>
-        </form>
+      <div class="form-group confirmation-checkbox">
+        <label class="checkbox-container">
+          <input type="checkbox" id="delete-confirm" name="confirm" required>
+          <span class="checkmark"></span>
+          Jeg forstår at denne handlingen ikke kan angres
+        </label>
       </div>
-    </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" id="cancel-delete">Avbryt</button>
+        <button type="submit" class="btn btn-danger">Slett konto</button>
+      </div>
+    </form>
   </div>
 </div>
 
 <% contentFor('script') %>
-<script src="/js/dashboard.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    // Password confirmation validation
-    const newPasswordInput = document.getElementById('newPassword');
-    const confirmPasswordInput = document.getElementById('confirmPassword');
+    // Password strength meter
+    const newPassword = document.getElementById('new-password');
+    const confirmPassword = document.getElementById('confirm-password');
+    const strengthBar = document.querySelector('.strength-bar');
+    const strengthText = document.querySelector('.strength-text');
     
-    if (newPasswordInput && confirmPasswordInput) {
-      confirmPasswordInput.addEventListener('input', function() {
-        if (newPasswordInput.value !== this.value) {
-          this.setCustomValidity('Passwords do not match');
-        } else {
-          this.setCustomValidity('');
-        }
-      });
-      
-      newPasswordInput.addEventListener('input', function() {
-        if (confirmPasswordInput.value && confirmPasswordInput.value !== this.value) {
-          confirmPasswordInput.setCustomValidity('Passwords do not match');
-        } else {
-          confirmPasswordInput.setCustomValidity('');
-        }
+    if (newPassword) {
+      newPassword.addEventListener('input', function() {
+        checkPasswordStrength(this.value);
+        checkPasswordMatch();
       });
     }
     
-    // Theme preview
-    const themeRadios = document.querySelectorAll('input[name="theme"]');
-    themeRadios.forEach(radio => {
-      radio.addEventListener('change', function() {
-        // Update body data-theme attribute to preview the theme
+    if (confirmPassword) {
+      confirmPassword.addEventListener('input', checkPasswordMatch);
+    }
+    
+    // Theme options
+    const themeOptions = document.querySelectorAll('.theme-option input');
+    themeOptions.forEach(option => {
+      option.addEventListener('change', function() {
+        document.querySelectorAll('.theme-option').forEach(opt => {
+          opt.classList.remove('active');
+        });
+        
+        this.closest('.theme-option').classList.add('active');
+        
+        // Apply theme
         document.body.setAttribute('data-theme', this.value);
       });
     });
+    
+    // Delete account modal
+    const deleteBtn = document.getElementById('delete-account-btn');
+    const deleteModal = document.getElementById('delete-modal');
+    const closeBtn = deleteModal.querySelector('.close');
+    const cancelBtn = document.getElementById('cancel-delete');
+    
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', function() {
+        deleteModal.style.display = 'block';
+      });
+    }
+    
+    if (closeBtn) {
+      closeBtn.addEventListener('click', function() {
+        deleteModal.style.display = 'none';
+      });
+    }
+    
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', function() {
+        deleteModal.style.display = 'none';
+      });
+    }
+    
+    // Close modal when clicking outside
+    window.addEventListener('click', function(event) {
+      if (event.target === deleteModal) {
+        deleteModal.style.display = 'none';
+      }
+    });
+    
+    // Form submission handlers
+    const accountForm = document.getElementById('account-settings-form');
+    if (accountForm) {
+      accountForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        submitAccountForm(this);
+      });
+    }
+    
+    const passwordForm = document.getElementById('password-form');
+    if (passwordForm) {
+      passwordForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        submitPasswordForm(this);
+      });
+    }
   });
+  
+  function checkPasswordStrength(password) {
+    // ...existing code...
+    
+    // Update text based on strength
+    const strengthTexts = {
+      0: 'Veldig svakt',
+      1: 'Svakt',
+      2: 'Middels',
+      3: 'Sterkt',
+      4: 'Veldig sterkt'
+    };
+    
+    document.querySelector('.strength-text').textContent = strengthTexts[strength];
+    
+    // ...existing code...
+  }
+  
+  function checkPasswordMatch() {
+    const password = document.getElementById('new-password').value;
+    const confirm = document.getElementById('confirm-password').value;
+    
+    if (confirm && password !== confirm) {
+      document.getElementById('confirm-password').setCustomValidity('Passordene samsvarer ikke');
+    } else {
+      document.getElementById('confirm-password').setCustomValidity('');
+    }
+  }
+  
+  function submitAccountForm(form) {
+    const formData = new FormData(form);
+    const data = {};
+    
+    formData.forEach((value, key) => {
+      if (key === 'notifications') {
+        data[key] = true;
+      } else {
+        data[key] = value;
+      }
+    });
+    
+    // Add notifications: false if checkbox not checked
+    if (!formData.has('notifications')) {
+      data.notifications = false;
+    }
+    
+    fetch('/user/settings/update', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          if (window.notifications) {
+            window.notifications.success('Innstillinger oppdatert');
+          }
+        } else {
+          if (window.notifications) {
+            window.notifications.error(data.message || 'Kunne ikke oppdatere innstillinger');
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Error updating settings:', error);
+        if (window.notifications) {
+          window.notifications.error('Det oppstod en feil ved oppdatering av innstillinger');
+        }
+      });
+  }
+  
+  function submitPasswordForm(form) {
+    const formData = new FormData(form);
+    const data = {};
+    
+    formData.forEach((value, key) => {
+      data[key] = value;
+    });
+    
+    fetch('/user/settings/password', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          if (window.notifications) {
+            window.notifications.success('Passord oppdatert');
+          }
+          form.reset();
+        } else {
+          if (window.notifications) {
+            window.notifications.error(data.message || 'Kunne ikke oppdatere passord');
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Error updating password:', error);
+        if (window.notifications) {
+          window.notifications.error('Det oppstod en feil ved oppdatering av passord');
+        }
+      });
+  }
 </script>

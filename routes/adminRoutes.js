@@ -175,4 +175,14 @@ router.get('/export/performance', authorize('head_admin'), (req, res) => {
   res.send('Admin,Assigned,Resolved,Resolution Time\n');
 });
 
+// Admin settings routes
+router.get('/settings', authorize('admin', 'head_admin'), adminController.getAdminSettings);
+router.post('/settings/update', authorize('admin', 'head_admin'), adminController.updateAdminSettings);
+
+// Staff management routes
+router.get('/staff', authorize('head_admin'), adminController.getStaffPage);
+router.post('/users/add', authorize('head_admin'), adminController.addAdmin);
+router.post('/users/:id/update', authorize('head_admin'), adminController.updateAdminById);
+router.get('/users/:id/performance', authorize('head_admin'), adminController.getAdminPerformance);
+
 module.exports = router;

@@ -1,0 +1,180 @@
+<%- contentFor('body') %>
+
+<div class="chat-waiting-container">
+  <div class="waiting-card">
+    <div class="waiting-header">
+      <div class="logo">
+        <i class="fas fa-headset"></i>
+        <span>Brukerstøtte</span>
+      </div>
+      <h2>Kobler til support</h2>
+    </div>
+    
+    <div class="waiting-content">
+      <div class="waiting-animation">
+        <div class="spinner"></div>
+      </div>
+      
+      <div class="waiting-status">
+        <p id="status-message">Leter etter en tilgjengelig kundebehandler...</p>
+        <div class="waiting-time">
+          <span>Ventetid: </span>
+          <span id="waiting-timer">0:00</span>
+        </div>
+      </div>
+      
+      <div class="request-details">
+        <div class="request-item">
+          <span class="request-label">Emne:</span>
+          <span class="request-value"><%= category %></span>
+        </div>
+        <div class="request-item">
+          <span class="request-label">Din melding:</span>
+          <span class="request-value message-preview"><%= message %></span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="waiting-actions">
+      <button id="cancel-request" class="btn btn-secondary">Avbryt forespørsel</button>
+      <button id="create-ticket" class="btn btn-primary">Opprett sak i stedet</button>
+    </div>
+  </div>
+  
+  <div class="support-info">
+    <h3>Mens du venter</h3>
+    <p>Du kan finne svar på spørsmålet ditt i våre selvhjelpsressurser:</p>
+    <div class="help-resources">
+      <a href="#" class="resource-card">
+        <i class="fas fa-book"></i>
+        <span>Kunnskapsbase</span>
+      </a>
+      <a href="#" class="resource-card">
+        <i class="fas fa-question-circle"></i>
+        <span>Vanlige spørsmål</span>
+      </a>
+      <a href="#" class="resource-card">
+        <i class="fas fa-tools"></i>
+        <span>Feilsøking</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<% contentFor('script') %>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  let socket;
+  let waitingStartTime;
+  let requestId = '<%= requestId %>';
+  let timerInterval;
+  
+  document.addEventListener('DOMContentLoaded', function() {
+    // Initialize socket
+    socket = io();
+    
+    // Set waiting start time
+    waitingStartTime = new Date();
+    
+    // Start waiting timer
+    startWaitingTimer();
+    
+    // Register chat request
+    socket.emit('request-chat', {
+      requestId: requestId,
+      category: '<%= category %>',
+      message: '<%= message %>'
+    });
+    
+    // Listen for socket events
+    setupSocketListeners();
+    
+    // Button event listeners
+    document.getElementById('cancel-request').addEventListener('click', cancelRequest);
+    document.getElementById('create-ticket').addEventListener('click', createTicket);
+  });
+  
+  function setupSocketListeners() {
+    // Connection established
+    socket.on('connect', function() {
+      console.log('Connected to server');
+    });
+    
+    // Chat request sent to admin
+    socket.on('chat-request-sent', function(data) {
+      updateStatusMessage(data.message || 'Din forespørsel er sendt til en kundebehandler.');
+    });
+    
+    // Chat request accepted
+    socket.on('chat-request-accepted', function(data) {
+      stopWaitingTimer();
+      updateStatusMessage('Kundebehandler funnet! Kobler deg til nå...');
+      
+      // Redirect to chat
+      setTimeout(() => {
+        window.location.href = `/user/messages?chat=${data.adminId}`;
+      }, 1500);
+    });
+    
+    // Chat request reassigned
+    socket.on('chat-request-reassigned', function(data) {
+      updateStatusMessage(data.message || 'Din forespørsel blir omdirigert til en annen kundebehandler...');
+    });
+    
+    // Chat request failed
+    socket.on('chat-request-failed', function(data) {
+      stopWaitingTimer();
+      updateStatusMessage(data.message || 'Ingen kundebehandlere er tilgjengelige akkurat nå');
+      
+      // Show create ticket button prominently
+      document.getElementById('create-ticket').style.backgroundColor = 'var(--primary-color)';
+      document.getElementById('create-ticket').classList.add('pulse-animation');
+      
+      // Hide cancel button
+      document.getElementById('cancel-request').style.display = 'none';
+    });
+  }
+  
+  function startWaitingTimer() {
+    timerInterval = setInterval(updateWaitingTime, 1000);
+  }
+  
+  function stopWaitingTimer() {
+    clearInterval(timerInterval);
+  }
+  
+  function updateWaitingTime() {
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - waitingStartTime) / 1000);
+    
+    const minutes = Math.floor(diffInSeconds / 60);
+    const seconds = diffInSeconds % 60;
+    
+    document.getElementById('waiting-timer').textContent = 
+      `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    
+    // If waiting too long (over 5 minutes), suggest creating a ticket
+    if (diffInSeconds > 300) {
+      updateStatusMessage('Kundebehandlere er opptatt. Vurder å opprette en sak i stedet.');
+      document.getElementById('create-ticket').style.backgroundColor = 'var(--primary-color)';
+      document.getElementById('create-ticket').classList.add('pulse-animation');
+    }
+  }
+  
+  function updateStatusMessage(message) {
+    document.getElementById('status-message').textContent = message;
+  }
+  
+  function cancelRequest() {
+    // Emit cancel event to server
+    socket.emit('cancel-chat-request', { requestId });
+    
+    // Redirect back to dashboard
+    window.location.href = '/user/dashboard';
+  }
+  
+  function createTicket() {
+    // Redirect to create ticket page with pre-filled info
+    window.location.href = `/user/tickets/create?category=<%= category %>&message=<%= encodeURIComponent(message) %>`;
+  }
+</script>

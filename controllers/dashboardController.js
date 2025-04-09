@@ -1,7 +1,7 @@
 const User = require('../models/User');
 const Ticket = require('../models/Ticket');
 const Message = require('../models/Message');
-const bcrypt = require('bcrypt');
+const argon2 = require('argon2'); // Replaced bcrypt with argon2
 
 // User dashboard
 exports.getUserDashboard = async (req, res) => {
@@ -207,15 +207,14 @@ exports.changePassword = async (req, res) => {
     const user = await User.findById(req.user._id);
     
     // Check current password
-    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    const isMatch = await argon2.verify(user.password, currentPassword);
     if (!isMatch) {
       req.flash('error', 'Current password is incorrect');
       return res.redirect('/user/settings');
     }
     
     // Hash new password
-    const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(newPassword, salt);
+    user.password = await argon2.hash(newPassword);
     
     await user.save();
     

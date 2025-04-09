@@ -56,52 +56,38 @@
   
   <!-- Main Content -->
   <div class="main-content">
-    <!-- Left Panel (Chat List) -->
+    <!-- Left Panel (Chat Queue) -->
     <div class="panel left-panel">
       <div class="panel-header">
-        <h2>Customer Chats</h2>
-        <div class="panel-actions">
-          <input type="text" id="search-users" placeholder="Search customers...">
-          <select id="filter-chats">
-            <option value="all">All Chats</option>
-            <option value="active">Active</option>
-            <option value="recent">Recent</option>
-            <option value="unread">Unread</option>
-          </select>
+        <h2>Meldingskø</h2>
+        <div class="admin-status-indicator">
+          <span class="status-dot <%= user.status %>"></span>
+          <span class="status-text">
+            <%= user.status === 'available' ? 'Tilgjengelig' : 
+               user.status === 'working' ? 'Opptatt' : 'Frakoblet' %>
+          </span>
+          <button id="quick-status-toggle" class="status-toggle-btn" title="Endre status">
+            <i class="fas fa-sync-alt"></i>
+          </button>
         </div>
       </div>
       <div class="panel-content">
-        <div class="chat-list">
-          <% if (chats && chats.length > 0) { %>
-            <% chats.forEach(chat => { %>
-              <div class="chat-item <%= chat.active ? 'active' : '' %> <%= chat.unreadCount > 0 ? 'unread' : '' %>" 
-                   data-user-id="<%= chat._id %>">
-                <div class="chat-user-info">
-                  <div class="chat-avatar">
-                    <%= chat.user.name.charAt(0).toUpperCase() %>
-                  </div>
-                  <div class="chat-details">
-                    <h4 class="chat-user-name"><%= chat.user.name %></h4>
-                    <p class="chat-preview"><%= chat.lastMessage %></p>
-                  </div>
-                </div>
-                <div class="chat-meta">
-                  <span class="chat-time"><%= formatTimeAgo(chat.updatedAt) %></span>
-                  <% if (chat.unreadCount > 0) { %>
-                    <span class="unread-badge"><%= chat.unreadCount %></span>
-                  <% } %>
-                </div>
-              </div>
-            <% }); %>
-          <% } else { %>
-            <div class="empty-chats">
-              <div class="empty-icon">
-                <i class="fas fa-comments"></i>
-              </div>
-              <h3>No Chats Found</h3>
-              <p>No customers have initiated a chat conversation yet.</p>
+        <div class="chat-queue-section">
+          <h3>Ventende forespørsler <span class="queue-count" id="queue-count">0</span></h3>
+          <div class="chat-queue" id="chat-queue">
+            <div class="empty-queue">
+              <p>Ingen ventende chatforespørsler</p>
             </div>
-          <% } %>
+          </div>
+        </div>
+        
+        <div class="chat-tabs-container">
+          <h3>Aktive chatter</h3>
+          <div class="chat-tabs" id="chat-tabs">
+            <div class="empty-tabs">
+              <p>Ingen aktive chatter</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -111,88 +97,138 @@
       <span class="divider-icon">⋮⋮</span>
     </div>
     
-    <!-- Right Panel (Chat Messages) -->
+    <!-- Right Panel (Chat View) -->
     <div class="panel right-panel">
-      <div class="panel-header chat-header" style="display: none;">
-        <div class="chat-user-info">
-          <div class="chat-avatar" id="chat-user-avatar"></div>
-          <div class="chat-details">
-            <h3 class="chat-user-name" id="chat-user-name"></h3>
-            <p class="chat-user-email" id="chat-user-email"></p>
+      <div class="panel-header">
+        <h2 id="chat-header">Meldingssenter</h2>
+      </div>
+      <div class="panel-content">
+        <div id="empty-chat" class="empty-chat">
+          <div class="empty-icon">
+            <i class="fas fa-comments"></i>
           </div>
+          <h3>Ingen aktiv chat</h3>
+          <p>Velg en chat fra listen til venstre eller vent på nye forespørsler.</p>
         </div>
-        <div class="chat-actions">
-          <button class="btn btn-outline" id="view-history-btn">
-            <i class="fas fa-history"></i> History
-          </button>
-          <button class="btn btn-primary" id="create-ticket-btn">
-            <i class="fas fa-ticket-alt"></i> Create Ticket
-          </button>
-        </div>
-      </div>
-      
-      <div class="empty-chat-state">
-        <div class="empty-icon">
-          <i class="fas fa-comments"></i>
-        </div>
-        <h3>Select a Chat</h3>
-        <p>Choose a customer chat from the list to start messaging.</p>
-      </div>
-      
-      <div class="chat-container" style="display: none;">
-        <div class="chat-messages" id="chat-messages"></div>
-        <div class="chat-input">
-          <textarea placeholder="Type your message here..." id="message-input" 
-                    onkeydown="if(event.keyCode === 13 && !event.shiftKey) { event.preventDefault(); sendMessage(); }"></textarea>
-          <button onclick="sendMessage()">
-            <i class="fas fa-paper-plane"></i>
-          </button>
+        
+        <div id="chat-container" class="chat-container" style="display: none;">
+          <div id="chat-messages" class="chat-messages"></div>
+          
+          <div id="chat-input" class="chat-input">
+            <form id="chat-form">
+              <div id="chat-attachments-preview" class="chat-attachments-preview"></div>
+              <div class="input-container">
+                <textarea id="message-input" placeholder="Skriv din melding her..." rows="1"></textarea>
+                <div class="chat-actions">
+                  <label for="file-upload" class="file-upload-label">
+                    <i class="fas fa-paperclip"></i>
+                  </label>
+                  <input type="file" id="file-upload" multiple style="display: none;" accept="image/*, .pdf, .doc, .docx">
+                  <button type="submit">
+                    <i class="fas fa-paper-plane"></i>
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+          
+          <div class="chat-actions-bar">
+            <button id="end-chat-btn" class="btn btn-danger">
+              <i class="fas fa-times-circle"></i> Avslutt chat
+            </button>
+            <button id="create-ticket-btn" class="btn btn-secondary">
+              <i class="fas fa-ticket-alt"></i> Opprett sak
+            </button>
+            <button id="transfer-chat-btn" class="btn btn-primary">
+              <i class="fas fa-exchange-alt"></i> Overfør chat
+            </button>
+          </div>
         </div>
       </div>
     </div>
   </div>
-  
-  <!-- Create Ticket Modal -->
-  <div id="create-ticket-modal" class="modal">
-    <div class="modal-content">
-      <span class="close">&times;</span>
-      <h2>Create Ticket from Chat</h2>
-      <form id="create-ticket-form">
-        <input type="hidden" id="user-id" name="userId">
-        <div class="form-group">
-          <label for="title">Title</label>
-          <input type="text" id="title" name="title" required>
-        </div>
-        <div class="form-group">
-          <label for="category">Category</label>
-          <select id="category" name="category" required>
-            <option value="">Select a category</option>
-            <option value="technical">Technical Issue</option>
-            <option value="account">Account Problem</option>
-            <option value="billing">Billing Question</option>
-            <option value="feature">Feature Request</option>
-            <option value="other">Other</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="description">Description</label>
-          <textarea id="description" name="description" rows="5" required></textarea>
-        </div>
-        <div class="form-group">
-          <label for="priority">Priority</label>
-          <select id="priority" name="priority">
-            <option value="low">Low</option>
-            <option value="medium" selected>Medium</option>
-            <option value="high">High</option>
-          </select>
-        </div>
-        <div class="form-group checkbox-group">
-          <input type="checkbox" id="assign-to-me" name="assignToMe" checked>
-          <label for="assign-to-me">Assign to me</label>
-        </div>
-        <button type="submit" class="btn btn-primary">Create Ticket</button>
-      </form>
+</div>
+
+<!-- Chat Queue Item Template -->
+<template id="queue-item-template">
+  <div class="queue-item">
+    <div class="queue-item-header">
+      <div class="queue-user-info">
+        <span class="queue-user-avatar"></span>
+        <span class="queue-user-name"></span>
+      </div>
+      <span class="queue-category"></span>
     </div>
+    <div class="queue-item-content"></div>
+    <div class="queue-item-actions">
+      <button class="btn btn-sm btn-success accept-chat">Aksepter</button>
+      <button class="btn btn-sm btn-danger decline-chat">Avvis</button>
+    </div>
+  </div>
+</template>
+
+<!-- Chat Tab Template -->
+<template id="chat-tab-template">
+  <div class="chat-tab">
+    <span class="tab-name"></span>
+    <span class="tab-close">
+      <i class="fas fa-times"></i>
+    </span>
+  </div>
+</template>
+
+<!-- Transfer Chat Modal -->
+<div id="transfer-modal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h2>Overfør chat</h2>
+    <p>Velg en administrator å overføre denne chatten til:</p>
+    <div class="admin-list" id="transfer-admin-list">
+      <!-- Admin list items will be added here -->
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-secondary" id="transfer-cancel">Avbryt</button>
+    </div>
+  </div>
+</div>
+
+<!-- Create Ticket Modal -->
+<div id="create-ticket-modal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h2>Opprett sak fra chat</h2>
+    <form id="create-ticket-form">
+      <div class="form-group">
+        <label for="ticket-title">Tittel</label>
+        <input type="text" id="ticket-title" name="title" required>
+      </div>
+      <div class="form-group">
+        <label for="ticket-category">Kategori</label>
+        <select id="ticket-category" name="category" required>
+          <option value="technical">Teknisk problem</option>
+          <option value="account">Kontoproblem</option>
+          <option value="billing">Fakturering</option>
+          <option value="feature">Funksjonsforespørsel</option>
+          <option value="other">Annet</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="ticket-priority">Prioritet</label>
+        <select id="ticket-priority" name="priority">
+          <option value="low">Lav</option>
+          <option value="medium" selected>Middels</option>
+          <option value="high">Høy</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="ticket-description">Beskrivelse</label>
+        <textarea id="ticket-description" name="description" rows="6" required></textarea>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Opprett sak</button>
+        <button type="button" class="btn btn-secondary" id="create-ticket-cancel">Avbryt</button>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -200,225 +236,424 @@
 <script src="/socket.io/socket.io.js"></script>
 <script src="/js/dashboard.js"></script>
 <script>
-  let currentChat = null;
   let socket;
-
+  let currentChat = null;
+  let activeChats = {};
+  
   document.addEventListener('DOMContentLoaded', function() {
-    // Setup socket connection
+    // Initialize socket connection
     initSocket();
     
-    // Chat item click handler
-    const chatItems = document.querySelectorAll('.chat-item');
-    chatItems.forEach(item => {
+    // Quick status toggle
+    document.getElementById('quick-status-toggle').addEventListener('click', toggleStatus);
+    
+    // Set up conversation click handler
+    const conversationItems = document.querySelectorAll('.conversation-item');
+    conversationItems.forEach(item => {
       item.addEventListener('click', function() {
-        const userId = this.getAttribute('data-user-id');
-        loadChat(userId);
-        
-        // Update UI
-        chatItems.forEach(chat => chat.classList.remove('active'));
-        this.classList.add('active');
-        this.classList.remove('unread');
-        
-        // Remove unread badge
-        const unreadBadge = this.querySelector('.unread-badge');
-        if (unreadBadge) {
-          unreadBadge.remove();
-        }
+        const userId = this.getAttribute('data-id');
+        loadConversation(userId);
       });
     });
-    
-    // Search functionality
-    const searchInput = document.getElementById('search-users');
-    if (searchInput) {
-      searchInput.addEventListener('input', function() {
-        const searchTerm = this.value.toLowerCase();
-        const chatItems = document.querySelectorAll('.chat-item');
-        
-        chatItems.forEach(item => {
-          const userName = item.querySelector('.chat-user-name').textContent.toLowerCase();
-          const preview = item.querySelector('.chat-preview').textContent.toLowerCase();
-          
-          if (userName.includes(searchTerm) || preview.includes(searchTerm)) {
-            item.style.display = '';
-          } else {
-            item.style.display = 'none';
-          }
-        });
-      });
-    }
-    
-    // Filter chats
-    const filterSelect = document.getElementById('filter-chats');
-    if (filterSelect) {
-      filterSelect.addEventListener('change', function() {
-        const filterValue = this.value;
-        const chatItems = document.querySelectorAll('.chat-item');
-        
-        chatItems.forEach(item => {
-          const isActive = item.classList.contains('active');
-          const isUnread = item.classList.contains('unread');
-          const timeElem = item.querySelector('.chat-time');
-          const isRecent = timeElem && timeElem.textContent.includes('minutes') || 
-                          timeElem.textContent.includes('just now') ||
-                          timeElem.textContent.includes('hour');
-          
-          if (filterValue === 'all' || 
-              (filterValue === 'active' && isActive) ||
-              (filterValue === 'unread' && isUnread) ||
-              (filterValue === 'recent' && isRecent)) {
-            item.style.display = '';
-          } else {
-            item.style.display = 'none';
-          }
-        });
-      });
-    }
-    
-    // Create ticket modal
-    const createTicketBtn = document.getElementById('create-ticket-btn');
-    const createTicketModal = document.getElementById('create-ticket-modal');
-    const closeModalBtn = document.querySelector('#create-ticket-modal .close');
-    
-    if (createTicketBtn && createTicketModal) {
-      createTicketBtn.addEventListener('click', function() {
-        if (currentChat) {
-          document.getElementById('user-id').value = currentChat;
-          createTicketModal.style.display = 'block';
-        }
-      });
-      
-      closeModalBtn.addEventListener('click', function() {
-        createTicketModal.style.display = 'none';
-      });
-      
-      window.addEventListener('click', function(event) {
-        if (event.target === createTicketModal) {
-          createTicketModal.style.display = 'none';
-        }
-      });
-    }
-    
-    // Create ticket form submission
-    const createTicketForm = document.getElementById('create-ticket-form');
-    if (createTicketForm) {
-      createTicketForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const userId = document.getElementById('user-id').value;
-        const title = document.getElementById('title').value;
-        const category = document.getElementById('category').value;
-        const description = document.getElementById('description').value;
-        const priority = document.getElementById('priority').value;
-        const assignToMe = document.getElementById('assign-to-me').checked;
-        
-        createTicketFromChat(userId, title, category, description, priority, assignToMe);
-      });
-    }
   });
   
   function initSocket() {
     socket = io();
     
     socket.on('connect', function() {
-      console.log('Connected to server');
+      console.log('Connected to socket server');
+      
+      // Notify server of admin's online status and get pending chats
+      socket.emit('admin-online', {
+        status: '<%= user.status %>',
+        specializations: <%- JSON.stringify(user.specializations || []) %>,
+        maxChats: <%= user.maxConcurrentChats || 3 %>
+      });
     });
     
+    // Listen for new chat requests
+    socket.on('chat-request', function(data) {
+      addChatRequest(data);
+    });
+    
+    // Listen for chat request cancellations
+    socket.on('chat-request-cancelled', function(data) {
+      removeChatRequest(data.requestId);
+    });
+    
+    // Listen for new messages
     socket.on('new-message', function(data) {
-      if (currentChat && data.sender.id === currentChat) {
-        appendMessage(data, false);
-      } else {
-        // Update chat list item
-        updateChatListItem(data.sender.id, data.message);
-      }
+      handleNewMessage(data);
     });
   }
   
-  function loadChat(userId) {
-    currentChat = userId;
+  function toggleStatus() {
+    const currentStatus = '<%= user.status %>';
+    let newStatus;
     
-    // Show chat container and hide empty state
-    document.querySelector('.chat-container').style.display = 'flex';
-    document.querySelector('.empty-chat-state').style.display = 'none';
-    document.querySelector('.chat-header').style.display = 'flex';
+    // Cycle through statuses
+    if (currentStatus === 'available') {
+      newStatus = 'working';
+    } else if (currentStatus === 'working') {
+      newStatus = 'offline';
+    } else {
+      newStatus = 'available';
+    }
     
-    // Clear previous messages
-    document.getElementById('chat-messages').innerHTML = '<div class="chat-loading">Loading messages...</div>';
-    
-    // Load user info
-    fetch(`/chat/admin/chat/${userId}`)
+    // Update status on server
+    fetch('/admin/settings/update', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        status: newStatus
+      })
+    })
       .then(response => response.json())
       .then(data => {
         if (data.success) {
-          // Update user info in header
-          document.getElementById('chat-user-name').textContent = data.user.name;
-          document.getElementById('chat-user-email').textContent = data.user.email;
-          document.getElementById('chat-user-avatar').textContent = data.user.name.charAt(0).toUpperCase();
+          // Update UI
+          updateStatusUI(newStatus);
           
-          // Display messages
-          const messagesContainer = document.getElementById('chat-messages');
-          messagesContainer.innerHTML = '';
-          
-          if (data.messages.length === 0) {
-            messagesContainer.innerHTML = `
-              <div class="chat-welcome">
-                <p>No messages yet. Start the conversation!</p>
-              </div>
-            `;
-          } else {
-            data.messages.forEach(message => {
-              appendMessage({
-                sender: {
-                  id: message.sender._id,
-                  name: message.sender.name
-                },
-                message: message.content,
-                timestamp: message.createdAt
-              }, true);
-            });
+          // Update socket status
+          if (socket) {
+            socket.emit('admin-status-change', { status: newStatus });
           }
           
-          // Scroll to bottom
-          messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        } else {
-          console.error('Failed to load chat:', data.message);
           if (window.notifications) {
-            window.notifications.error(data.message, 'Chat Error');
+            window.notifications.success(`Status changed to ${newStatus}`);
           }
         }
       })
       .catch(error => {
-        console.error('Error loading chat:', error);
-        if (window.notifications) {
-          window.notifications.error('Failed to load messages', 'Chat Error');
-        }
+        console.error('Error updating status:', error);
       });
   }
   
-  function appendMessage(data, isHistory = false) {
+  function updateStatusUI(status) {
+    const statusDot = document.querySelector('.status-dot');
+    const statusText = document.querySelector('.status-text');
+    
+    // Remove current status classes
+    statusDot.classList.remove('available', 'working', 'offline');
+    
+    // Add new status class
+    statusDot.classList.add(status);
+    
+    // Update text
+    statusText.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+  }
+  
+  function addChatRequest(data) {
+    // Get the queue section
+    const queueSection = document.getElementById('chat-queue');
+    const emptyQueue = queueSection.querySelector('.empty-queue');
+    
+    // Hide empty message if it exists
+    if (emptyQueue) {
+      emptyQueue.style.display = 'none';
+    }
+    
+    // Create a new chat request item from template
+    const template = document.getElementById('queue-item-template');
+    const newItem = document.importNode(template.content, true).querySelector('.queue-item');
+    
+    // Add request ID
+    newItem.setAttribute('data-request-id', data.requestId);
+    
+    // Set user info
+    newItem.querySelector('.queue-user-avatar').textContent = data.user.name.charAt(0).toUpperCase();
+    newItem.querySelector('.queue-user-name').textContent = data.user.name;
+    
+    // Set category if available
+    if (data.category) {
+      const categoryEl = newItem.querySelector('.queue-category');
+      categoryEl.textContent = data.category.charAt(0).toUpperCase() + data.category.slice(1);
+      categoryEl.classList.add(`category-${data.category}`);
+    }
+    
+    // Set message content
+    newItem.querySelector('.queue-item-content').textContent = data.message || 'New chat request';
+    
+    // Add event listeners to buttons
+    newItem.querySelector('.accept-chat').addEventListener('click', function() {
+      acceptChatRequest(data.requestId, data.user.id);
+    });
+    
+    newItem.querySelector('.decline-chat').addEventListener('click', function() {
+      declineChatRequest(data.requestId);
+    });
+    
+    // Add to queue
+    queueSection.appendChild(newItem);
+    
+    // Update count
+    updateQueueCount();
+    
+    // Show notification
+    if (window.notifications) {
+      window.notifications.info('New chat request from ' + data.user.name, 'Chat Request');
+    }
+  }
+  
+  function updateQueueCount() {
+    const count = document.querySelectorAll('#chat-queue .queue-item').length;
+    document.getElementById('queue-count').textContent = count;
+  }
+  
+  function removeChatRequest(requestId) {
+    const requestItem = document.querySelector(`#chat-queue .queue-item[data-request-id="${requestId}"]`);
+    
+    if (requestItem) {
+      requestItem.remove();
+      updateQueueCount();
+      
+      // Show empty message if no requests
+      if (document.querySelectorAll('#chat-queue .queue-item').length === 0) {
+        const queueSection = document.getElementById('chat-queue');
+        if (!queueSection.querySelector('.empty-queue')) {
+          const emptyEl = document.createElement('div');
+          emptyEl.className = 'empty-queue';
+          emptyEl.innerHTML = '<p>No pending chat requests</p>';
+          queueSection.appendChild(emptyEl);
+        } else {
+          queueSection.querySelector('.empty-queue').style.display = 'block';
+        }
+      }
+    }
+  }
+  
+  function acceptChatRequest(requestId, userId) {
+    // Tell server we accept this chat
+    socket.emit('accept-chat-request', {
+      requestId: requestId,
+      userId: userId
+    });
+    
+    // Remove from queue
+    removeChatRequest(requestId);
+    
+    // Load the conversation
+    loadConversation(userId);
+  }
+  
+  function declineChatRequest(requestId) {
+    // Tell server we declined this chat
+    socket.emit('decline-chat-request', {
+      requestId: requestId
+    });
+    
+    // Remove from queue
+    removeChatRequest(requestId);
+  }
+  
+  function loadConversation(userId) {
+    // If this chat is already active, just switch to it
+    if (activeChats[userId]) {
+      switchToChat(userId);
+      return;
+    }
+    
+    // Get conversation from server
+    fetch(`/chat/conversation/${userId}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Store in active chats
+          activeChats[userId] = {
+            user: data.user,
+            messages: data.messages
+          };
+          
+          // Create a new tab
+          createChatTab(userId, data.user.name);
+          
+          // Switch to this chat
+          switchToChat(userId);
+          
+          // Mark conversation as read on UI
+          const conversationItem = document.querySelector(`.conversation-item[data-id="${userId}"]`);
+          if (conversationItem) {
+            conversationItem.classList.remove('unread');
+            conversationItem.querySelector('.unread-badge')?.remove();
+          }
+        } else {
+          if (window.notifications) {
+            window.notifications.error(data.message, 'Error');
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Error loading conversation:', error);
+      });
+  }
+  
+  function createChatTab(userId, userName) {
+    // Create tab from template
+    const template = document.getElementById('chat-tab-template');
+    const newTab = document.importNode(template.content, true).querySelector('.chat-tab');
+    
+    // Set attributes
+    newTab.setAttribute('data-user-id', userId);
+    newTab.querySelector('.tab-name').textContent = userName;
+    
+    // Add event listener for tab click
+    newTab.addEventListener('click', function(e) {
+      if (!e.target.closest('.tab-close')) {
+        switchToChat(userId);
+      }
+    });
+    
+    // Add event listener for close button
+    newTab.querySelector('.tab-close').addEventListener('click', function(e) {
+      e.stopPropagation();
+      closeChat(userId);
+    });
+    
+    // Add to tab container
+    document.getElementById('chat-tabs').appendChild(newTab);
+    
+    // Also add to mobile tabs
+    const mobileTab = newTab.cloneNode(true);
+    mobileTab.addEventListener('click', function(e) {
+      if (!e.target.closest('.tab-close')) {
+        switchToChat(userId);
+      }
+    });
+    
+    mobileTab.querySelector('.tab-close').addEventListener('click', function(e) {
+      e.stopPropagation();
+      closeChat(userId);
+    });
+    
+    document.getElementById('mobile-chat-tabs').appendChild(mobileTab);
+  }
+  
+  function switchToChat(userId) {
+    if (!activeChats[userId]) return;
+    
+    // Update current chat
+    currentChat = userId;
+    
+    // Update header
+    document.getElementById('conversation-header').textContent = activeChats[userId].user.name;
+    
+    // Show chat interface
+    document.getElementById('empty-chat').style.display = 'none';
+    document.getElementById('chat-messages').style.display = 'block';
+    document.getElementById('chat-input-container').style.display = 'block';
+    
+    // Highlight active tab
+    document.querySelectorAll('.chat-tab').forEach(tab => {
+      tab.classList.remove('active');
+      if (tab.getAttribute('data-user-id') === userId) {
+        tab.classList.add('active');
+      }
+    });
+    
+    // Highlight active conversation
+    document.querySelectorAll('.conversation-item').forEach(item => {
+      item.classList.remove('active');
+      item.setAttribute('data-active', 'false');
+      if (item.getAttribute('data-id') === userId) {
+        item.classList.add('active');
+        item.setAttribute('data-active', 'true');
+      }
+    });
+    
+    // Load messages
+    loadMessages(userId);
+    
+    // Mark as read on server
+    fetch(`/chat/mark-read/${userId}`, { method: 'POST' })
+      .catch(error => console.error('Error marking messages as read:', error));
+  }
+  
+  function loadMessages(userId) {
     const messagesContainer = document.getElementById('chat-messages');
-    const isOutgoing = data.sender.id === '<%= user._id %>';
+    messagesContainer.innerHTML = '';
     
-    const messageHTML = `
-      <div class="message ${isOutgoing ? 'outgoing' : 'incoming'}">
-        <div class="message-avatar">
-          ${data.sender.name.charAt(0).toUpperCase()}
-        </div>
-        <div class="message-content">
-          <div class="message-bubble">
-            ${data.message}
-          </div>
-          <div class="message-time">
-            ${isHistory ? formatTime(data.timestamp) : formatTime(new Date())}
-          </div>
-        </div>
-      </div>
-    `;
+    // Get messages from active chats
+    const chat = activeChats[userId];
+    if (!chat || !chat.messages) return;
     
-    // Append message to container
-    messagesContainer.innerHTML += messageHTML;
+    // Add messages to container
+    chat.messages.forEach(message => {
+      const isFromCurrentUser = message.sender._id === '<%= user._id %>';
+      
+      const messageEl = document.createElement('div');
+      messageEl.className = `message ${isFromCurrentUser ? 'outgoing' : 'incoming'}`;
+      
+      const avatarEl = document.createElement('div');
+      avatarEl.className = 'message-avatar';
+      avatarEl.textContent = message.sender.name.charAt(0).toUpperCase();
+      
+      const contentEl = document.createElement('div');
+      contentEl.className = 'message-content';
+      
+      const senderEl = document.createElement('div');
+      senderEl.className = 'message-sender';
+      senderEl.textContent = message.sender.name;
+      
+      if (message.sender.role === 'admin' || message.sender.role === 'head_admin') {
+        const badgeEl = document.createElement('span');
+        badgeEl.className = 'badge admin-badge';
+        badgeEl.textContent = 'Admin';
+        senderEl.appendChild(badgeEl);
+      }
+      
+      const bubbleEl = document.createElement('div');
+      bubbleEl.className = 'message-bubble';
+      bubbleEl.textContent = message.content;
+      
+      const timeEl = document.createElement('div');
+      timeEl.className = 'message-time';
+      timeEl.textContent = new Date(message.createdAt).toLocaleTimeString([], { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
+      
+      contentEl.appendChild(senderEl);
+      contentEl.appendChild(bubbleEl);
+      contentEl.appendChild(timeEl);
+      
+      messageEl.appendChild(avatarEl);
+      messageEl.appendChild(contentEl);
+      
+      messagesContainer.appendChild(messageEl);
+    });
     
     // Scroll to bottom
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
+  
+  function closeChat(userId) {
+    if (!activeChats[userId]) return;
+    
+    // Remove from active chats
+    delete activeChats[userId];
+    
+    // Remove tabs
+    document.querySelectorAll(`.chat-tab[data-user-id="${userId}"]`).forEach(tab => {
+      tab.remove();
+    });
+    
+    // If this was the current chat, switch to another or show empty
+    if (currentChat === userId) {
+      const chatIds = Object.keys(activeChats);
+      
+      if (chatIds.length > 0) {
+        switchToChat(chatIds[0]);
+      } else {
+        // Show empty state
+        currentChat = null;
+        document.getElementById('conversation-header').textContent = 'Select a conversation';
+        document.getElementById('empty-chat').style.display = 'block';
+        document.getElementById('chat-messages').style.display = 'none';
+        document.getElementById('chat-input-container').style.display = 'none';
+      }
+    }
   }
   
   function sendMessage() {
@@ -429,122 +664,117 @@
     
     if (!message) return;
     
-    // Send message via socket
-    socket.emit('send-message', {
-      recipientId: currentChat,
-      message: message
-    });
-    
     // Clear input
     messageInput.value = '';
     
-    // Add message to UI
-    appendMessage({
-      sender: {
-        id: '<%= user._id %>',
-        name: '<%= user.name %>'
-      },
-      message: message
-    });
-  }
-  
-  function updateChatListItem(userId, lastMessage) {
-    const chatItem = document.querySelector(`.chat-item[data-user-id="${userId}"]`);
-    if (!chatItem) return;
-    
-    // Update preview text
-    const preview = chatItem.querySelector('.chat-preview');
-    if (preview) {
-      preview.textContent = lastMessage.length > 30 ? lastMessage.substring(0, 30) + '...' : lastMessage;
-    }
-    
-    // Add unread badge if not current chat
-    if (currentChat !== userId) {
-      chatItem.classList.add('unread');
-      
-      let unreadBadge = chatItem.querySelector('.unread-badge');
-      if (unreadBadge) {
-        // Increment count
-        const count = parseInt(unreadBadge.textContent) + 1;
-        unreadBadge.textContent = count;
-      } else {
-        // Create new badge
-        const meta = chatItem.querySelector('.chat-meta');
-        if (meta) {
-          unreadBadge = document.createElement('span');
-          unreadBadge.className = 'unread-badge';
-          unreadBadge.textContent = '1';
-          meta.appendChild(unreadBadge);
-        }
-      }
-    }
-    
-    // Update timestamp
-    const timestamp = chatItem.querySelector('.chat-time');
-    if (timestamp) {
-      timestamp.textContent = 'just now';
-    }
-    
-    // Move to top of list
-    const chatList = chatItem.parentNode;
-    chatList.insertBefore(chatItem, chatList.firstChild);
-  }
-  
-  function createTicketFromChat(userId, title, category, description, priority, assignToMe) {
-    fetch('/tickets/create', {
+    // Send message to server
+    fetch('/chat/send', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        userId,
-        title,
-        category,
-        description,
-        priority,
-        assignToMe
+        recipientId: currentChat,
+        message
       })
     })
       .then(response => response.json())
       .then(data => {
-        if (data.success) {
-          // Close modal
-          document.getElementById('create-ticket-modal').style.display = 'none';
-          
-          // Show success message
+        if (!data.success) {
           if (window.notifications) {
-            window.notifications.success('Ticket created successfully', 'Success');
-          }
-          
-          // Inform user about ticket creation
-          socket.emit('send-message', {
-            recipientId: userId,
-            message: `I've created a support ticket for your issue: "${title}". You can track the progress under My Tickets.`
-          });
-          
-          // Redirect to ticket
-          setTimeout(() => {
-            window.location.href = `/tickets/admin/${data.ticketId}`;
-          }, 1500);
-        } else {
-          if (window.notifications) {
-            window.notifications.error(data.message, 'Ticket Creation Error');
+            window.notifications.error(data.message, 'Error');
           }
         }
       })
       .catch(error => {
-        console.error('Error creating ticket:', error);
-        if (window.notifications) {
-          window.notifications.error('Failed to create ticket', 'Ticket Creation Error');
-        }
+        console.error('Error sending message:', error);
       });
   }
   
-  function formatTime(timestamp) {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString([], { 
+  function handleNewMessage(data) {
+    // Check if this is for a current chat
+    if (activeChats[data.sender.id] || activeChats[data.recipient.id]) {
+      const chatId = data.sender.id === '<%= user._id %>' ? 
+                    data.recipient.id : data.sender.id;
+      
+      // Add to messages array
+      if (activeChats[chatId]) {
+        activeChats[chatId].messages.push(data);
+        
+        // If this is the current chat, update the view
+        if (currentChat === chatId) {
+          appendMessageToView(data);
+        } else {
+          // Add unread indicator to tab
+          document.querySelectorAll(`.chat-tab[data-user-id="${chatId}"]`).forEach(tab => {
+            if (!tab.classList.contains('unread')) {
+              tab.classList.add('unread');
+            }
+          });
+        }
+      }
+    } else {
+      // This is a new conversation
+      // Create notification for new message
+      if (window.notifications) {
+        window.notifications.info(
+          `New message from ${data.sender.name}: ${data.message.substring(0, 30)}...`,
+          'New Message'
+        );
+      }
+      
+      // Add to conversations list at the top
+      // This would need to be implemented on a page refresh or with a server call
+      // to get the full conversation details
+    }
+  }
+  
+  function appendMessageToView(data) {
+    const messagesContainer = document.getElementById('chat-messages');
+    const isFromCurrentUser = data.sender.id === '<%= user._id %>';
+    
+    const messageEl = document.createElement('div');
+    messageEl.className = `message ${isFromCurrentUser ? 'outgoing' : 'incoming'}`;
+    
+    const avatarEl = document.createElement('div');
+    avatarEl.className = 'message-avatar';
+    avatarEl.textContent = data.sender.name.charAt(0).toUpperCase();
+    
+    const contentEl = document.createElement('div');
+    contentEl.className = 'message-content';
+    
+    const senderEl = document.createElement('div');
+    senderEl.className = 'message-sender';
+    senderEl.textContent = data.sender.name;
+    
+    if (data.sender.role === 'admin' || data.sender.role === 'head_admin') {
+      const badgeEl = document.createElement('span');
+      badgeEl.className = 'badge admin-badge';
+      badgeEl.textContent = 'Admin';
+      senderEl.appendChild(badgeEl);
+    }
+    
+    const bubbleEl = document.createElement('div');
+    bubbleEl.className = 'message-bubble';
+    bubbleEl.textContent = data.message;
+    
+    const timeEl = document.createElement('div');
+    timeEl.className = 'message-time';
+    timeEl.textContent = new Date().toLocaleTimeString([], { 
       hour: '2-digit', 
       minute: '2-digit' 
-    }) + ' ' + date.toLocaleDateString();
+    });
+    
+    contentEl.appendChild(senderEl);
+    contentEl.appendChild(bubbleEl);
+    contentEl.appendChild(timeEl);
+    
+    messageEl.appendChild(avatarEl);
+    messageEl.appendChild(contentEl);
+    
+    messagesContainer.appendChild(messageEl);
+    
+    // Scroll to bottom
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
   }
 </script>

@@ -36,6 +36,17 @@
   
   // Create a notification
   function createNotification(message, title, type = 'info', duration = 5000) {
+    // Default titles in Norwegian
+    const defaultTitles = {
+      'success': 'Suksess',
+      'error': 'Feil',
+      'warning': 'Advarsel',
+      'info': 'Informasjon'
+    };
+    
+    // Use default title if none provided
+    const finalTitle = title || defaultTitles[type];
+    
     // Create notification element
     const notification = document.createElement('div');
     notification.className = `notification ${type}`;
@@ -47,7 +58,7 @@
         <i class="${types[type].icon}" style="color: ${types[type].color}"></i>
       </div>
       <div class="notification-content">
-        ${title ? `<h4 class="notification-title">${title}</h4>` : ''}
+        ${finalTitle ? `<h4 class="notification-title">${finalTitle}</h4>` : ''}
         <p class="notification-message">${message}</p>
       </div>
       <button class="notification-close">
@@ -81,32 +92,21 @@
   // Remove a notification
   function removeNotification(notification) {
     notification.classList.remove('show');
-    notification.classList.add('hide');
     
-    // Remove from DOM after animation
+    // Remove after animation completes
     setTimeout(() => {
-      if (notification.parentNode) {
-        notification.parentNode.removeChild(notification);
+      if (notification.parentNode === notificationCenter) {
+        notificationCenter.removeChild(notification);
       }
     }, 300);
   }
   
-  // Create helper functions for each notification type
-  const notifications = {
-    success: function(message, title, duration) {
-      return createNotification(message, title, 'success', duration);
-    },
-    error: function(message, title, duration) {
-      return createNotification(message, title, 'error', duration);
-    },
-    warning: function(message, title, duration) {
-      return createNotification(message, title, 'warning', duration);
-    },
-    info: function(message, title, duration) {
-      return createNotification(message, title, 'info', duration);
-    }
+  // Expose notification methods globally
+  window.notifications = {
+    success: (message, title) => createNotification(message, title, 'success'),
+    error: (message, title) => createNotification(message, title, 'error'),
+    warning: (message, title) => createNotification(message, title, 'warning'),
+    info: (message, title) => createNotification(message, title, 'info'),
+    custom: (message, title, type, duration) => createNotification(message, title, type, duration)
   };
-  
-  // Make available globally
-  window.notifications = notifications;
 })();

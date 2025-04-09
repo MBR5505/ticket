@@ -17,35 +17,35 @@
       <!-- Admin Navigation -->
       <a href="/admin/dashboard" class="navbar-item active">
         <i class="fas fa-home"></i>
-        <span>Dashboard</span>
+        <span>Dashbord</span>
       </a>
       <a href="/admin/tickets" class="navbar-item">
         <i class="fas fa-ticket-alt"></i>
-        <span>All Tickets</span>
+        <span>Alle saker</span>
       </a>
       <a href="/admin/statistics" class="navbar-item">
         <i class="fas fa-chart-bar"></i>
-        <span>Statistics</span>
+        <span>Statistikk</span>
       </a>
       <% if (user.role === 'head_admin') { %>
         <a href="#" class="navbar-item" data-panel="notifications-panel">
           <i class="fas fa-bell"></i>
-          <span>Notifications</span>
+          <span>Varsler</span>
         </a>
         <a href="/admin/users" class="navbar-item">
           <i class="fas fa-users"></i>
-          <span>Users</span>
+          <span>Brukere</span>
         </a>
       <% } %>
       <a href="#" class="navbar-item" data-panel="settings-panel">
         <i class="fas fa-cog"></i>
-        <span>Settings</span>
+        <span>Innstillinger</span>
       </a>
       
       <!-- Logout -->
       <a href="/auth/logout" class="navbar-item">
         <i class="fas fa-sign-out-alt"></i>
-        <span>Logout</span>
+        <span>Logg ut</span>
       </a>
     </div>
   </nav>
@@ -55,15 +55,15 @@
     <!-- Left Panel (My Tickets) -->
     <div class="panel left-panel">
       <div class="panel-header">
-        <h2>My Assigned Tickets</h2>
+        <h2>Mine tildelte saker</h2>
         <div class="panel-actions">
           <div class="search-filter">
-            <input type="text" id="search-tickets" placeholder="Search tickets...">
+            <input type="text" id="search-tickets" placeholder="Søk etter saker...">
             <select id="filter-status">
-              <option value="all">All Status</option>
-              <option value="open">Open</option>
-              <option value="in_progress">In Progress</option>
-              <option value="resolved">Resolved</option>
+              <option value="all">Alle statuser</option>
+              <option value="open">Åpen</option>
+              <option value="in_progress">Under behandling</option>
+              <option value="resolved">Løst</option>
             </select>
           </div>
         </div>
@@ -75,12 +75,12 @@
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th>Title</th>
-                  <th>User</th>
+                  <th>Tittel</th>
+                  <th>Bruker</th>
                   <th>Status</th>
-                  <th>Priority</th>
-                  <th>Updated</th>
-                  <th>Actions</th>
+                  <th>Prioritet</th>
+                  <th>Oppdatert</th>
+                  <th>Handlinger</th>
                 </tr>
               </thead>
               <tbody>
@@ -91,20 +91,22 @@
                     <td><%= ticket.user.name %></td>
                     <td>
                       <span class="status-badge <%= ticket.status %>">
-                        <%= ticket.status === 'open' ? 'Open' : 
-                           ticket.status === 'in_progress' ? 'In Progress' : 
-                           'Resolved' %>
+                        <%= ticket.status === 'open' ? 'Åpen' : 
+                           ticket.status === 'in_progress' ? 'Under behandling' : 
+                           'Løst' %>
                       </span>
                     </td>
                     <td>
                       <span class="priority-badge <%= ticket.priority %>">
-                        <%= ticket.priority.charAt(0).toUpperCase() + ticket.priority.slice(1) %>
+                        <%= ticket.priority === 'low' ? 'Lav' : 
+                           ticket.priority === 'medium' ? 'Middels' : 
+                           'Høy' %>
                       </span>
                     </td>
                     <td><%= formatTime(ticket.updatedAt) %></td>
                     <td>
                       <a href="/tickets/admin/<%= ticket._id %>" class="btn btn-sm btn-primary">
-                        <i class="fas fa-eye"></i> View
+                        <i class="fas fa-eye"></i> Vis
                       </a>
                     </td>
                   </tr>
@@ -117,8 +119,8 @@
             <div class="empty-icon">
               <i class="fas fa-clipboard-list"></i>
             </div>
-            <h3>No Assigned Tickets</h3>
-            <p>You don't have any tickets assigned to you yet.</p>
+            <h3>Ingen tildelte saker</h3>
+            <p>Du har ingen saker tildelt til deg ennå.</p>
           </div>
         <% } %>
       </div>
@@ -132,7 +134,7 @@
     <!-- Right Panel (Open Tickets) -->
     <div class="panel right-panel">
       <div class="panel-header">
-        <h2>Open Tickets</h2>
+        <h2>Åpne saker</h2>
       </div>
       <div class="panel-content">
         <% if (openTickets && openTickets.length > 0) { %>
@@ -141,12 +143,12 @@
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th>Title</th>
-                  <th>User</th>
-                  <th>Category</th>
-                  <th>Priority</th>
-                  <th>Created</th>
-                  <th>Actions</th>
+                  <th>Tittel</th>
+                  <th>Bruker</th>
+                  <th>Kategori</th>
+                  <th>Prioritet</th>
+                  <th>Opprettet</th>
+                  <th>Handlinger</th>
                 </tr>
               </thead>
               <tbody>
@@ -158,16 +160,18 @@
                     <td><%= ticket.category %></td>
                     <td>
                       <span class="priority-badge <%= ticket.priority %>">
-                        <%= ticket.priority.charAt(0).toUpperCase() + ticket.priority.slice(1) %>
+                        <%= ticket.priority === 'low' ? 'Lav' : 
+                           ticket.priority === 'medium' ? 'Middels' : 
+                           'Høy' %>
                       </span>
                     </td>
                     <td><%= formatTime(ticket.createdAt) %></td>
                     <td>
                       <a href="/tickets/admin/<%= ticket._id %>" class="btn btn-sm btn-primary">
-                        <i class="fas fa-eye"></i> View
+                        <i class="fas fa-eye"></i> Vis
                       </a>
                       <button class="btn btn-sm btn-secondary assign-to-me" data-ticket-id="<%= ticket._id %>">
-                        <i class="fas fa-user-check"></i> Assign to me
+                        <i class="fas fa-user-check"></i> Tildel til meg
                       </button>
                     </td>
                   </tr>
@@ -177,20 +181,20 @@
           </div>
           
           <div class="view-all-link">
-            <a href="/admin/tickets" class="btn btn-outline">View All Open Tickets</a>
+            <a href="/admin/tickets" class="btn btn-outline">Vis alle åpne saker</a>
           </div>
         <% } else { %>
           <div class="empty-state">
             <div class="empty-icon">
               <i class="fas fa-check-circle"></i>
             </div>
-            <h3>No Open Tickets</h3>
-            <p>There are no unassigned open tickets at the moment.</p>
+            <h3>Ingen åpne saker</h3>
+            <p>Det er ingen utildelte åpne saker for øyeblikket.</p>
           </div>
         <% } %>
         
         <div class="active-chats">
-          <h3>Active User Chats</h3>
+          <h3>Aktive brukerchatter</h3>
           
           <% if (chats && chats.length > 0) { %>
             <div class="chat-list">
@@ -214,11 +218,11 @@
             </div>
             
             <div class="view-all-link">
-              <a href="/admin/messages" class="btn btn-outline">View All Messages</a>
+              <a href="/admin/messages" class="btn btn-outline">Vis alle meldinger</a>
             </div>
           <% } else { %>
             <div class="empty-chats">
-              <p>No active conversations at the moment.</p>
+              <p>Ingen aktive samtaler for øyeblikket.</p>
             </div>
           <% } %>
         </div>
@@ -229,7 +233,7 @@
   <!-- Third Panel for notifications/settings -->
   <div class="third-panel">
     <div class="third-panel-header">
-      <h3 class="panel-title">Panel Title</h3>
+      <h3 class="panel-title">Panel-tittel</h3>
       <div class="close-panel">
         <i class="fas fa-times"></i>
       </div>
@@ -240,32 +244,114 @@
         <div class="notifications-list">
           <!-- Notification items will be added dynamically -->
           <div class="empty-notifications">
-            <p>You have no new notifications.</p>
+            <p>Du har ingen nye varsler.</p>
           </div>
         </div>
       </div>
       
       <!-- Settings panel -->
       <div id="settings-panel" style="display: none;">
-        <h3>Theme Settings</h3>
+        <h3>Temainnstillinger</h3>
         <div class="settings-section">
           <div class="theme-selector">
             <button class="theme-btn light-theme" data-theme="light">
-              <i class="fas fa-sun"></i> Light
+              <i class="fas fa-sun"></i> Lyst
             </button>
             <button class="theme-btn dark-theme" data-theme="dark">
-              <i class="fas fa-moon"></i> Dark
+              <i class="fas fa-moon"></i> Mørkt
             </button>
           </div>
         </div>
         
-        <h3>Account Settings</h3>
+        <h3>Kontoinnstillinger</h3>
         <div class="settings-section">
-          <p>Visit the <a href="/user/settings">Settings Page</a> to update your profile and account settings.</p>
+          <p>Besøk <a href="/user/settings">Innstillinger</a> for å oppdatere din profil og innstillinger.</p>
         </div>
       </div>
     </div>
   </div>
+</div>
+
+<div class="dashboard-stats">
+  <div class="stats-card">
+    <div class="stats-header">
+      <h3>Mine tildelte saker</h3>
+      <span class="stats-badge"><%= myTickets.length %></span>
+    </div>
+    <div class="stats-body">
+      <div class="mini-chart">
+        <div class="chart-item">
+          <span class="chart-label">Åpen</span>
+          <div class="chart-bar">
+            <div class="bar-fill open" style="width: <%= myTickets.filter(t => t.status === 'open').length / Math.max(myTickets.length, 1) * 100 %>%"></div>
+          </div>
+          <span class="chart-value"><%= myTickets.filter(t => t.status === 'open').length %></span>
+        </div>
+        <div class="chart-item">
+          <span class="chart-label">Under behandling</span>
+          <div class="chart-bar">
+            <div class="bar-fill in-progress" style="width: <%= myTickets.filter(t => t.status === 'in_progress').length / Math.max(myTickets.length, 1) * 100 %>%"></div>
+          </div>
+          <span class="chart-value"><%= myTickets.filter(t => t.status === 'in_progress').length %></span>
+        </div>
+        <div class="chart-item">
+          <span class="chart-label">Løst</span>
+          <div class="chart-bar">
+            <div class="bar-fill resolved" style="width: <%= myTickets.filter(t => t.status === 'resolved').length / Math.max(myTickets.length, 1) * 100 %>%"></div>
+          </div>
+          <span class="chart-value"><%= myTickets.filter(t => t.status === 'resolved').length %></span>
+        </div>
+      </div>
+    </div>
+    <div class="stats-footer">
+      <a href="/admin/tickets?assigned=me" class="stats-link">Vis alle <i class="fas fa-arrow-right"></i></a>
+    </div>
+  </div>
+</div>
+
+<!-- Assigned Tickets Section -->
+<div class="dashboard-section">
+  <div class="section-header">
+    <h3>Mine tildelte saker</h3>
+    <a href="/admin/tickets?assigned=me" class="section-link">Vis alle</a>
+  </div>
+  
+  <% if (myTickets && myTickets.length > 0) { %>
+    <div class="tickets-grid">
+      <% myTickets.slice(0, 4).forEach(ticket => { %>
+        <div class="ticket-card" onclick="window.location.href='/tickets/admin/<%= ticket._id %>'">
+          <div class="ticket-header">
+            <span class="ticket-id">#<%= ticket._id.toString().substr(-6).toUpperCase() %></span>
+            <span class="ticket-status <%= ticket.status %>">
+              <%= ticket.status === 'open' ? 'Åpen' : 
+                 ticket.status === 'in_progress' ? 'Under behandling' : 
+                 'Løst' %>
+            </span>
+          </div>
+          <h4 class="ticket-title"><%= ticket.title %></h4>
+          <div class="ticket-meta">
+            <span><i class="fas fa-user"></i> <%= ticket.user.name %></span>
+            <span><i class="fas fa-calendar"></i> <%= new Date(ticket.createdAt).toLocaleDateString() %></span>
+          </div>
+          <div class="ticket-footer">
+            <span class="ticket-priority priority-<%= ticket.priority %>">
+              <%= ticket.priority.charAt(0).toUpperCase() + ticket.priority.slice(1) %>
+            </span>
+            <span class="ticket-category">
+              <%= ticket.category.charAt(0).toUpperCase() + ticket.category.slice(1) %>
+            </span>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+  <% } else { %>
+    <div class="empty-section">
+      <p>Du har ingen tildelte saker.</p>
+      <a href="/admin/tickets?assigned=unassigned" class="btn btn-primary">
+        Finn saker å tildele
+      </a>
+    </div>
+  <% } %>
 </div>
 
 <% contentFor('script') %>
@@ -360,7 +446,7 @@
       .then(data => {
         if (data.success) {
           if (window.notifications) {
-            window.notifications.success('Ticket assigned to you successfully');
+            window.notifications.success('Sak tildelt til deg');
           }
           
           // Refresh the page to update the ticket lists
@@ -376,7 +462,7 @@
       .catch(error => {
         console.error('Error assigning ticket:', error);
         if (window.notifications) {
-          window.notifications.error('An error occurred while assigning the ticket');
+          window.notifications.error('En feil oppstod under tildeling av saken');
         }
       });
   }
@@ -396,7 +482,7 @@
       .then(data => {
         if (data.success) {
           if (window.notifications) {
-            window.notifications.success('Theme updated successfully');
+            window.notifications.success('Tema oppdatert');
           }
         }
       })

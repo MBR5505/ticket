@@ -52,205 +52,276 @@
   
   <!-- Main Content -->
   <div class="main-content">
-    <!-- Left Panel (Ticket List) -->
+    <!-- Left Panel (Ticket Filters) -->
     <div class="panel left-panel">
       <div class="panel-header">
-        <h2>Ticket Management</h2>
-        <div class="panel-actions">
-          <div class="search-filter">
-            <input type="text" id="search-tickets" placeholder="Search tickets...">
-            <select id="filter-status">
-              <option value="all">All Status</option>
-              <option value="open">Open</option>
-              <option value="in_progress">In Progress</option>
-              <option value="resolved">Resolved</option>
-            </select>
-            <select id="filter-assigned">
-              <option value="all">All Tickets</option>
-              <option value="assigned">Assigned</option>
-              <option value="unassigned">Unassigned</option>
-              <option value="mine">My Tickets</option>
-            </select>
-          </div>
-        </div>
+        <h2>Saksfiltre</h2>
       </div>
       <div class="panel-content">
-        <% if (tickets && tickets.length > 0) { %>
-          <div class="tickets-table-container">
-            <table class="tickets-table">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Title</th>
-                  <th>User</th>
-                  <th>Category</th>
-                  <th>Status</th>
-                  <th>Priority</th>
-                  <th>Created</th>
-                  <th>Assigned To</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% tickets.forEach(ticket => { %>
-                  <tr class="ticket-row <%= ticket.status %>" data-id="<%= ticket._id %>">
-                    <td class="ticket-id"><%= ticket._id.toString().slice(-6).toUpperCase() %></td>
-                    <td class="ticket-title"><%= ticket.title %></td>
-                    <td class="ticket-user"><%= ticket.user.name %></td>
-                    <td class="ticket-category"><%= ticket.category %></td>
-                    <td class="ticket-status">
-                      <span class="status-badge <%= ticket.status %>">
-                        <%= ticket.status === 'open' ? 'Open' : 
-                           ticket.status === 'in_progress' ? 'In Progress' : 
-                           'Resolved' %>
-                      </span>
-                    </td>
-                    <td class="ticket-priority">
-                      <span class="priority-badge <%= ticket.priority %>">
-                        <%= ticket.priority.charAt(0).toUpperCase() + ticket.priority.slice(1) %>
-                      </span>
-                    </td>
-                    <td class="ticket-created"><%= new Date(ticket.createdAt).toLocaleDateString() %></td>
-                    <td class="ticket-assigned">
-                      <% if (ticket.assignedTo) { %>
-                        <%= ticket.assignedTo.name %>
-                      <% } else { %>
-                        <span class="unassigned">Unassigned</span>
-                      <% } %>
-                    </td>
-                    <td class="ticket-actions">
-                      <a href="/tickets/admin/<%= ticket._id %>" class="btn btn-sm btn-primary">
-                        <i class="fas fa-eye"></i> View
-                      </a>
-                      <% if (!ticket.assignedTo) { %>
-                        <button class="btn btn-sm btn-secondary assign-to-me" data-ticket-id="<%= ticket._id %>">
-                          <i class="fas fa-user-check"></i> Assign to me
-                        </button>
-                      <% } %>
-                    </td>
-                  </tr>
-                <% }); %>
-              </tbody>
-            </table>
+        <div class="filter-section">
+          <h3>Søk</h3>
+          <div class="search-box">
+            <input type="text" id="ticket-search" placeholder="Søk etter saker...">
+            <button id="search-btn"><i class="fas fa-search"></i></button>
           </div>
-        <% } else { %>
-          <div class="empty-state">
-            <div class="empty-icon">
-              <i class="fas fa-ticket-alt"></i>
-            </div>
-            <h3>No Tickets Found</h3>
-            <p>There are no tickets in the system yet.</p>
+        </div>
+        
+        <div class="filter-section">
+          <h3>Status</h3>
+          <div class="filter-options">
+            <label class="checkbox-container">
+              <input type="checkbox" name="status" value="all" checked>
+              <span class="checkmark"></span>
+              Alle
+            </label>
+            <label class="checkbox-container">
+              <input type="checkbox" name="status" value="open" checked>
+              <span class="checkmark"></span>
+              Åpen
+            </label>
+            <label class="checkbox-container">
+              <input type="checkbox" name="status" value="in_progress" checked>
+              <span class="checkmark"></span>
+              Under behandling
+            </label>
+            <label class="checkbox-container">
+              <input type="checkbox" name="status" value="resolved" checked>
+              <span class="checkmark"></span>
+              Løst
+            </label>
           </div>
-        <% } %>
+        </div>
+        
+        <div class="filter-section">
+          <h3>Prioritet</h3>
+          <div class="filter-options">
+            <label class="checkbox-container">
+              <input type="checkbox" name="priority" value="all" checked>
+              <span class="checkmark"></span>
+              Alle
+            </label>
+            <label class="checkbox-container">
+              <input type="checkbox" name="priority" value="low" checked>
+              <span class="checkmark"></span>
+              Lav
+            </label>
+            <label class="checkbox-container">
+              <input type="checkbox" name="priority" value="medium" checked>
+              <span class="checkmark"></span>
+              Middels
+            </label>
+            <label class="checkbox-container">
+              <input type="checkbox" name="priority" value="high" checked>
+              <span class="checkmark"></span>
+              Høy
+            </label>
+          </div>
+        </div>
+        
+        <div class="filter-section">
+          <h3>Kategori</h3>
+          <div class="filter-options">
+            <label class="checkbox-container">
+              <input type="checkbox" name="category" value="all" checked>
+              <span class="checkmark"></span>
+              Alle
+            </label>
+            <label class="checkbox-container">
+              <input type="checkbox" name="category" value="technical" checked>
+              <span class="checkmark"></span>
+              Teknisk
+            </label>
+            <label class="checkbox-container">
+              <input type="checkbox" name="category" value="account" checked>
+              <span class="checkmark"></span>
+              Konto
+            </label>
+            <label class="checkbox-container">
+              <input type="checkbox" name="category" value="billing" checked>
+              <span class="checkmark"></span>
+              Fakturering
+            </label>
+            <label class="checkbox-container">
+              <input type="checkbox" name="category" value="feature" checked>
+              <span class="checkmark"></span>
+              Funksjonalitet
+            </label>
+            <label class="checkbox-container">
+              <input type="checkbox" name="category" value="other" checked>
+              <span class="checkmark"></span>
+              Annet
+            </label>
+          </div>
+        </div>
+        
+        <div class="filter-section">
+          <h3>Tidsperiode</h3>
+          <div class="filter-options">
+            <label class="radio-container">
+              <input type="radio" name="timeframe" value="all" checked>
+              <span class="radio-mark"></span>
+              Alle datoer
+            </label>
+            <label class="radio-container">
+              <input type="radio" name="timeframe" value="today">
+              <span class="radio-mark"></span>
+              I dag
+            </label>
+            <label class="radio-container">
+              <input type="radio" name="timeframe" value="week">
+              <span class="radio-mark"></span>
+              Denne uken
+            </label>
+            <label class="radio-container">
+              <input type="radio" name="timeframe" value="month">
+              <span class="radio-mark"></span>
+              Denne måneden
+            </label>
+          </div>
+        </div>
+        
+        <div class="filter-actions">
+          <button id="apply-filters" class="btn btn-primary">Bruk filtre</button>
+          <button id="reset-filters" class="btn btn-secondary">Tilbakestill</button>
+        </div>
       </div>
     </div>
     
-    <!-- Panel Divider -->
-    <div class="panel-divider">
-      <span class="divider-icon">⋮⋮</span>
-    </div>
-    
-    <!-- Right Panel (Quick Stats) -->
+    <!-- Right Panel (Tickets List) -->
     <div class="panel right-panel">
       <div class="panel-header">
-        <h2>Ticket Overview</h2>
+        <h2>Alle saker</h2>
+        <div class="panel-actions">
+          <select id="sort-tickets">
+            <option value="created_desc">Nyeste først</option>
+            <option value="created_asc">Eldste først</option>
+            <option value="priority_desc">Høyeste prioritet først</option>
+            <option value="priority_asc">Laveste prioritet først</option>
+          </select>
+        </div>
       </div>
       <div class="panel-content">
-        <!-- Ticket Stats -->
-        <div class="ticket-stats">
-          <div class="stat-card">
-            <div class="stat-icon">
-              <i class="fas fa-ticket-alt"></i>
+        <div class="tickets-container">
+          <% if (tickets && tickets.length > 0) { %>
+            <div class="tickets-table-container">
+              <table class="tickets-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Tittel</th>
+                    <th>Bruker</th>
+                    <th>Status</th>
+                    <th>Prioritet</th>
+                    <th>Kategori</th>
+                    <th>Opprettet</th>
+                    <th>Tildelt til</th>
+                    <th>Handlinger</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% tickets.forEach(ticket => { %>
+                    <tr class="ticket-row <%= ticket.status %>">
+                      <td><%= ticket._id.toString().slice(-6).toUpperCase() %></td>
+                      <td><%= ticket.title %></td>
+                      <td><%= ticket.user.name %></td>
+                      <td>
+                        <span class="status-badge <%= ticket.status %>">
+                          <%= ticket.status === 'open' ? 'Åpen' : 
+                             ticket.status === 'in_progress' ? 'Under behandling' : 
+                             'Løst' %>
+                        </span>
+                      </td>
+                      <td>
+                        <span class="priority-badge <%= ticket.priority %>">
+                          <%= ticket.priority === 'low' ? 'Lav' : 
+                             ticket.priority === 'medium' ? 'Middels' : 
+                             'Høy' %>
+                        </span>
+                      </td>
+                      <td><%= ticket.category.charAt(0).toUpperCase() + ticket.category.slice(1) %></td>
+                      <td><%= formatTime(ticket.createdAt) %></td>
+                      <td>
+                        <% if (ticket.assignedTo) { %>
+                          <%= ticket.assignedTo.name %>
+                        <% } else { %>
+                          <span class="unassigned">Ikke tildelt</span>
+                        <% } %>
+                      </td>
+                      <td>
+                        <div class="ticket-actions">
+                          <a href="/tickets/admin/<%= ticket._id %>" class="btn btn-sm btn-primary">
+                            <i class="fas fa-eye"></i> Vis
+                          </a>
+                          <% if (!ticket.assignedTo) { %>
+                            <button class="btn btn-sm btn-success assign-to-me" data-id="<%= ticket._id %>">
+                              <i class="fas fa-user-check"></i> Tildel til meg
+                            </button>
+                          <% } %>
+                        </div>
+                      </td>
+                    </tr>
+                  <% }); %>
+                </tbody>
+              </table>
             </div>
-            <div class="stat-info">
-              <h3>Total Tickets</h3>
-              <p class="stat-value"><%= tickets ? tickets.length : 0 %></p>
-            </div>
-          </div>
-          
-          <div class="stat-card">
-            <div class="stat-icon open">
-              <i class="fas fa-exclamation-circle"></i>
-            </div>
-            <div class="stat-info">
-              <h3>Open</h3>
-              <p class="stat-value"><%= tickets ? tickets.filter(t => t.status === 'open').length : 0 %></p>
-            </div>
-          </div>
-          
-          <div class="stat-card">
-            <div class="stat-icon in-progress">
-              <i class="fas fa-spinner"></i>
-            </div>
-            <div class="stat-info">
-              <h3>In Progress</h3>
-              <p class="stat-value"><%= tickets ? tickets.filter(t => t.status === 'in_progress').length : 0 %></p>
-            </div>
-          </div>
-          
-          <div class="stat-card">
-            <div class="stat-icon resolved">
-              <i class="fas fa-check-circle"></i>
-            </div>
-            <div class="stat-info">
-              <h3>Resolved</h3>
-              <p class="stat-value"><%= tickets ? tickets.filter(t => t.status === 'resolved').length : 0 %></p>
-            </div>
-          </div>
-        </div>
-        
-        <!-- My Assigned Tickets -->
-        <div class="my-tickets">
-          <h3>My Assigned Tickets</h3>
-          <div class="my-tickets-list">
-            <% 
-              const myTickets = tickets ? tickets.filter(t => t.assignedTo && t.assignedTo._id.toString() === user._id.toString()) : [];
-            %>
             
-            <% if (myTickets.length > 0) { %>
-              <div class="ticket-list">
-                <% myTickets.slice(0, 5).forEach(ticket => { %>
-                  <div class="ticket-card" data-id="<%= ticket._id %>" onclick="window.location.href='/tickets/admin/<%= ticket._id %>'">
-                    <div class="ticket-header">
-                      <h3 class="ticket-title"><%= ticket.title %></h3>
-                      <span class="ticket-status <%= ticket.status %>">
-                        <%= ticket.status === 'open' ? 'Open' : 
-                           ticket.status === 'in_progress' ? 'In Progress' : 
-                           'Resolved' %>
-                      </span>
-                    </div>
-                    <div class="ticket-info">
-                      <span><i class="fas fa-user"></i> <%= ticket.user.name %></span>
-                      <span><i class="fas fa-tag"></i> <%= ticket.category %></span>
-                      <span><i class="fas fa-calendar"></i> <%= new Date(ticket.createdAt).toLocaleDateString() %></span>
-                    </div>
-                    <div class="ticket-description">
-                      <%= ticket.description %>
-                    </div>
-                  </div>
-                <% }); %>
-                
-                <% if (myTickets.length > 5) { %>
-                  <a href="#" class="see-all-link">See all <%= myTickets.length %> tickets</a>
-                <% } %>
+            <!-- Pagination -->
+            <div class="pagination">
+              <% if (currentPage > 1) { %>
+                <a href="?page=<%= currentPage - 1 %>" class="pagination-item">
+                  <i class="fas fa-chevron-left"></i> Forrige
+                </a>
+              <% } %>
+              
+              <% for (let i = 1; i <= totalPages; i++) { %>
+                <a href="?page=<%= i %>" class="pagination-item <%= i === currentPage ? 'active' : '' %>">
+                  <%= i %>
+                </a>
+              <% } %>
+              
+              <% if (currentPage < totalPages) { %>
+                <a href="?page=<%= currentPage + 1 %>" class="pagination-item">
+                  Neste <i class="fas fa-chevron-right"></i>
+                </a>
+              <% } %>
+            </div>
+          <% } else { %>
+            <div class="empty-state">
+              <div class="empty-icon">
+                <i class="fas fa-ticket-alt"></i>
               </div>
-            <% } else { %>
-              <div class="empty-tickets">
-                <p>You don't have any assigned tickets.</p>
-              </div>
-            <% } %>
-          </div>
-        </div>
-        
-        <!-- Category Distribution -->
-        <div class="category-breakdown">
-          <h3>Tickets by Category</h3>
-          <div class="category-chart-container">
-            <canvas id="categoryChart"></canvas>
-          </div>
+              <h3>Ingen saker funnet</h3>
+              <p>Det er ingen saker som matcher søkekriteriene dine.</p>
+            </div>
+          <% } %>
         </div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- Assign Ticket Modal -->
+<div id="assign-ticket-modal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h2>Tildel sak</h2>
+    <form id="assign-ticket-form">
+      <input type="hidden" id="ticket-id">
+      <div class="form-group">
+        <label for="assign-to">Tildel til</label>
+        <select id="assign-to" name="assignTo" required>
+          <option value="">Velg en administrator</option>
+          <% admins.forEach(admin => { %>
+            <option value="<%= admin._id %>"><%= admin.name %></option>
+          <% }); %>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="assign-note">Notat (valgfritt)</label>
+        <textarea id="assign-note" name="note" rows="3" placeholder="Legg til en kommentar om tildelingen..."></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Tildel sak</button>
+    </form>
   </div>
 </div>
 
@@ -259,103 +330,384 @@
 <script src="/socket.io/socket.io.js"></script>
 <script src="/js/dashboard.js"></script>
 <script>
+  let currentTicketId = null;
+  
   document.addEventListener('DOMContentLoaded', function() {
-    // Search functionality
-    const searchInput = document.getElementById('search-tickets');
-    if (searchInput) {
-      searchInput.addEventListener('input', function() {
-        const searchTerm = this.value.toLowerCase();
-        const rows = document.querySelectorAll('.ticket-row');
-        
-        rows.forEach(row => {
-          const title = row.querySelector('.ticket-title').textContent.toLowerCase();
-          const id = row.querySelector('.ticket-id').textContent.toLowerCase();
-          const category = row.querySelector('.ticket-category').textContent.toLowerCase();
-          const user = row.querySelector('.ticket-user').textContent.toLowerCase();
-          
-          if (title.includes(searchTerm) || id.includes(searchTerm) || 
-              category.includes(searchTerm) || user.includes(searchTerm)) {
-            row.style.display = '';
-          } else {
-            row.style.display = 'none';
-          }
-        });
-      });
+    // Initialize socket
+    if (typeof io !== 'undefined') {
+      initializeSocket();
     }
     
-    // Filter by status
-    const filterStatus = document.getElementById('filter-status');
-    if (filterStatus) {
-      filterStatus.addEventListener('change', function() {
-        filterTickets();
-      });
-    }
-    
-    // Filter by assignment
-    const filterAssigned = document.getElementById('filter-assigned');
-    if (filterAssigned) {
-      filterAssigned.addEventListener('change', function() {
-        filterTickets();
-      });
-    }
-    
-    // Assign to me buttons
-    const assignButtons = document.querySelectorAll('.assign-to-me');
-    assignButtons.forEach(button => {
-      button.addEventListener('click', function() {
-        const ticketId = this.getAttribute('data-ticket-id');
-        assignTicketToMe(ticketId);
-      });
-    });
-    
-    // Create category chart
-    const tickets = <%- JSON.stringify(tickets || []) %>;
-    if (tickets.length > 0) {
-      createCategoryChart(tickets);
+    // Check if there's a ticket ID in the URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const ticketId = urlParams.get('id');
+    if (ticketId) {
+      loadTicketDetails(ticketId);
+      
+      // Highlight the selected ticket
+      const ticketCard = document.querySelector(`.ticket-card[data-id="${ticketId}"]`);
+      if (ticketCard) {
+        ticketCard.classList.add('selected');
+      }
     }
   });
   
-  function filterTickets() {
-    const statusFilter = document.getElementById('filter-status').value;
-    const assignedFilter = document.getElementById('filter-assigned').value;
-    const rows = document.querySelectorAll('.ticket-row');
-    const userId = '<%= user._id %>';
+  // Load ticket details
+  function loadTicketDetails(ticketId) {
+    currentTicketId = ticketId;
     
-    rows.forEach(row => {
-      let showByStatus = true;
-      let showByAssignment = true;
-      
-      // Status filtering
-      if (statusFilter !== 'all') {
-        showByStatus = row.classList.contains(statusFilter);
-      }
-      
-      // Assignment filtering
-      if (assignedFilter !== 'all') {
-        const assignedCell = row.querySelector('.ticket-assigned');
-        const isAssigned = !assignedCell.querySelector('.unassigned');
-        const isAssignedToMe = assignedCell.textContent.trim() !== 'Unassigned' && 
-                               row.getAttribute('data-assigned-to') === userId;
-        
-        if (assignedFilter === 'assigned') {
-          showByAssignment = isAssigned;
-        } else if (assignedFilter === 'unassigned') {
-          showByAssignment = !isAssigned;
-        } else if (assignedFilter === 'mine') {
-          showByAssignment = isAssignedToMe;
-        }
-      }
-      
-      // Show/hide row based on both filters
-      if (showByStatus && showByAssignment) {
-        row.style.display = '';
-      } else {
-        row.style.display = 'none';
-      }
+    // Show loading state
+    document.getElementById('empty-ticket-details').style.display = 'none';
+    document.getElementById('ticket-details-container').style.display = 'block';
+    document.getElementById('ticket-details-container').innerHTML = `
+      <div class="loading-spinner">
+        <i class="fas fa-spinner fa-spin"></i>
+        <p>Loading ticket details...</p>
+      </div>
+    `;
+    
+    // Update URL without refreshing
+    const url = new URL(window.location);
+    url.searchParams.set('id', ticketId);
+    window.history.pushState({}, '', url);
+    
+    // Highlight selected ticket
+    document.querySelectorAll('.ticket-card').forEach(card => {
+      card.classList.remove('selected');
     });
+    document.querySelector(`.ticket-card[data-id="${ticketId}"]`).classList.add('selected');
+    
+    // Fetch ticket details
+    fetch(`/tickets/admin/${ticketId}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to load ticket details');
+        }
+        return response.text();
+      })
+      .then(html => {
+        document.getElementById('ticket-details-container').innerHTML = html;
+        
+        // Initialize ticket action buttons
+        initTicketActions();
+      })
+      .catch(error => {
+        console.error('Error loading ticket details:', error);
+        document.getElementById('ticket-details-container').innerHTML = `
+          <div class="error-message">
+            <i class="fas fa-exclamation-circle"></i>
+            <p>Error loading ticket details. Please try again.</p>
+          </div>
+        `;
+      });
   }
   
-  function assignTicketToMe(ticketId) {
+  // Initialize ticket action buttons
+  function initTicketActions() {
+    // Status update button
+    const statusBtns = document.querySelectorAll('.status-action');
+    statusBtns.forEach(btn => {
+      btn.addEventListener('click', function() {
+        const status = this.getAttribute('data-status');
+        updateTicketStatus(currentTicketId, status);
+      });
+    });
+    
+    // Priority update button
+    const priorityBtns = document.querySelectorAll('.priority-action');
+    priorityBtns.forEach(btn => {
+      btn.addEventListener('click', function() {
+        const priority = this.getAttribute('data-priority');
+        updateTicketPriority(currentTicketId, priority);
+      });
+    });
+    
+    // Assignment button
+    const assignBtn = document.getElementById('assign-ticket-btn');
+    if (assignBtn) {
+      assignBtn.addEventListener('click', function() {
+        showAssignmentModal(currentTicketId);
+      });
+    }
+    
+    // Close ticket button
+    const closeBtn = document.getElementById('close-ticket-btn');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', function() {
+        if (confirm('Are you sure you want to close this ticket?')) {
+          updateTicketStatus(currentTicketId, 'resolved');
+        }
+      });
+    }
+    
+    // Reopen ticket button
+    const reopenBtn = document.getElementById('reopen-ticket-btn');
+    if (reopenBtn) {
+      reopenBtn.addEventListener('click', function() {
+        updateTicketStatus(currentTicketId, 'open');
+      });
+    }
+  }
+  
+  // Show assignment modal
+  function showAssignmentModal(ticketId) {
+    const modal = document.getElementById('assignment-modal');
+    modal.style.display = 'block';
+    
+    // Get current assigned admin if any
+    const ticketCard = document.querySelector(`.ticket-card[data-id="${ticketId}"]`);
+    const currentAssignee = ticketCard.querySelector('.ticket-assignment .assigned-to-me');
+    
+    // Get assignment form
+    const form = document.getElementById('assignment-form');
+    
+    // Pre-select current admin if assigned to current user
+    if (currentAssignee) {
+      const adminSelect = document.getElementById('assign-admin-select');
+      const currentUserOption = adminSelect.querySelector(`option[value="${'<%= user._id %>'}"]`);
+      if (currentUserOption) {
+        currentUserOption.selected = true;
+      }
+    }
+    
+    // Handle form submission
+    form.onsubmit = function(e) {
+      e.preventDefault();
+      const adminId = document.getElementById('assign-admin-select').value;
+      assignTicket(ticketId, adminId);
+      modal.style.display = 'none';
+    };
+    
+    // Close modal when clicking the X
+    document.querySelector('#assignment-modal .close').onclick = function() {
+      modal.style.display = 'none';
+    };
+    
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+      if (event.target === modal) {
+        modal.style.display = 'none';
+      }
+    };
+  }
+  
+  // Assign ticket to admin
+  function assignTicket(ticketId, adminId) {
+    fetch(`/tickets/${ticketId}/assign`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ adminId })
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          if (window.notifications) {
+            window.notifications.success(data.message);
+          }
+          
+          // Reload ticket details
+          loadTicketDetails(ticketId);
+          
+          // Update assignment info in the ticket card
+          updateTicketCardAssignment(ticketId, adminId);
+        } else {
+          if (window.notifications) {
+            window.notifications.error(data.message);
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Error assigning ticket:', error);
+        if (window.notifications) {
+          window.notifications.error('Failed to assign ticket');
+        }
+      });
+  }
+  
+  // Update assignment info in ticket card
+  function updateTicketCardAssignment(ticketId, adminId) {
+    const ticketCard = document.querySelector(`.ticket-card[data-id="${ticketId}"]`);
+    if (!ticketCard) return;
+    
+    const assignmentSpan = ticketCard.querySelector('.ticket-assignment');
+    
+    if (adminId) {
+      // Get admin name from select option
+      const adminSelect = document.getElementById('assign-admin-select');
+      const selectedOption = adminSelect.options[adminSelect.selectedIndex];
+      const adminName = selectedOption.textContent.replace('(You)', '').trim();
+      
+      assignmentSpan.innerHTML = `
+        <i class="fas fa-user-check"></i> 
+        ${adminName}
+        ${adminId === '<%= user._id %>' ? '<span class="assigned-to-me">(You)</span>' : ''}
+      `;
+      
+      // Update status if open
+      const statusSpan = ticketCard.querySelector('.ticket-status');
+      if (statusSpan.classList.contains('open')) {
+        statusSpan.classList.remove('open');
+        statusSpan.classList.add('in_progress');
+        statusSpan.textContent = 'In Progress';
+      }
+    } else {
+      assignmentSpan.innerHTML = `
+        <i class="fas fa-user-check"></i> 
+        <span class="unassigned">Unassigned</span>
+      `;
+    }
+  }
+  
+  // Update ticket status
+  function updateTicketStatus(ticketId, status) {
+    fetch(`/tickets/${ticketId}/status`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ status })
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          if (window.notifications) {
+            window.notifications.success(data.message);
+          }
+          
+          // Reload ticket details
+          loadTicketDetails(ticketId);
+          
+          // Update status info in the ticket card
+          updateTicketCardStatus(ticketId, status);
+        } else {
+          if (window.notifications) {
+            window.notifications.error(data.message);
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Error updating ticket status:', error);
+        if (window.notifications) {
+          window.notifications.error('Failed to update ticket status');
+        }
+      });
+  }
+  
+  // Update ticket priority
+  function updateTicketPriority(ticketId, priority) {
+    fetch(`/tickets/${ticketId}/priority`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ priority })
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          if (window.notifications) {
+            window.notifications.success(data.message);
+          }
+          
+          // Reload ticket details
+          loadTicketDetails(ticketId);
+          
+          // Update priority info in the ticket card
+          updateTicketCardPriority(ticketId, priority);
+        } else {
+          if (window.notifications) {
+            window.notifications.error(data.message);
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Error updating ticket priority:', error);
+        if (window.notifications) {
+          window.notifications.error('Failed to update ticket priority');
+        }
+      });
+  }
+  
+  // Update ticket card status
+  function updateTicketCardStatus(ticketId, status) {
+    const ticketCard = document.querySelector(`.ticket-card[data-id="${ticketId}"]`);
+    if (!ticketCard) return;
+    
+    const statusSpan = ticketCard.querySelector('.ticket-status');
+    
+    // Remove existing status classes
+    statusSpan.classList.remove('open', 'in_progress', 'resolved');
+    
+    // Add new status class
+    statusSpan.classList.add(status);
+    
+    // Update text
+    statusSpan.textContent = status === 'open' ? 'Open' : 
+                            status === 'in_progress' ? 'In Progress' : 
+                            'Resolved';
+  }
+  
+  // Update ticket card priority
+  function updateTicketCardPriority(ticketId, priority) {
+    const ticketCard = document.querySelector(`.ticket-card[data-id="${ticketId}"]`);
+    if (!ticketCard) return;
+    
+    const prioritySpan = ticketCard.querySelector('.ticket-priority');
+    
+    // Remove existing priority classes
+    prioritySpan.classList.remove('priority-low', 'priority-medium', 'priority-high');
+    
+    // Add new priority class
+    prioritySpan.classList.add(`priority-${priority}`);
+    
+    // Update text
+    prioritySpan.textContent = priority.charAt(0).toUpperCase() + priority.slice(1);
+  }
+  
+  // Handle ticket updates from socket
+  function handleTicketStatusUpdate(data) {
+    if (data.ticketId === currentTicketId) {
+      // Reload ticket details if currently viewing
+      loadTicketDetails(data.ticketId);
+    }
+    
+    // Update ticket card status
+    const ticketCard = document.querySelector(`.ticket-card[data-id="${data.ticketId}"]`);
+    if (ticketCard) {
+      const statusSpan = ticketCard.querySelector('.ticket-status');
+      
+      // Remove existing status classes
+      statusSpan.classList.remove('open', 'in_progress', 'resolved');
+      
+      // Add new status class
+      statusSpan.classList.add(data.status);
+      
+      // Update text
+      statusSpan.textContent = data.status === 'open' ? 'Open' : 
+                              data.status === 'in_progress' ? 'In Progress' : 
+                              'Resolved';
+    }
+  }
+  
+  // Handle new ticket assignment notification
+  function handleTicketAssignment(data) {
+    if (window.notifications) {
+      window.notifications.info(
+        `You've been assigned ticket: ${data.ticketTitle}`,
+        'New Assignment'
+      );
+    }
+  }
+</script>
+<script>
+  // ...existing code...
+  
+  // Assign ticket to me
+  function assignToMe(ticketId) {
+    if (!ticketId) return;
+    
     fetch(`/tickets/${ticketId}/assign`, {
       method: 'PUT',
       headers: {
@@ -366,73 +718,32 @@
       .then(response => response.json())
       .then(data => {
         if (data.success) {
-          // Refresh the page to show the assignment
-          window.location.reload();
+          if (window.notifications) {
+            window.notifications.success('Sak tildelt til deg');
+          }
+          
+          // Refresh the page to update the ticket list
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
         } else {
           if (window.notifications) {
-            window.notifications.error(data.message, 'Assignment Error');
-          } else {
-            alert('Failed to assign ticket: ' + data.message);
+            window.notifications.error(data.message || 'Kunne ikke tildele sak');
           }
         }
       })
       .catch(error => {
         console.error('Error assigning ticket:', error);
         if (window.notifications) {
-          window.notifications.error('An error occurred during assignment', 'Assignment Error');
-        } else {
-          alert('An error occurred while assigning the ticket');
+          window.notifications.error('Det oppstod en feil ved tildeling av sak');
         }
       });
   }
   
-  function createCategoryChart(tickets) {
-    // Count tickets by category
-    const categories = {};
-    tickets.forEach(ticket => {
-      if (!categories[ticket.category]) {
-        categories[ticket.category] = 0;
-      }
-      categories[ticket.category]++;
-    });
-    
-    // Prepare data for chart
-    const labels = Object.keys(categories);
-    const data = Object.values(categories);
-    
-    // Define colors for different categories
-    const colors = [
-      'rgba(52, 152, 219, 0.7)',  // Blue
-      'rgba(46, 204, 113, 0.7)',  // Green
-      'rgba(155, 89, 182, 0.7)',  // Purple
-      'rgba(241, 196, 15, 0.7)',  // Yellow
-      'rgba(230, 126, 34, 0.7)'   // Orange
-    ];
-    
-    // Create chart
-    const ctx = document.getElementById('categoryChart').getContext('2d');
-    new Chart(ctx, {
-      type: 'doughnut',
-      data: {
-        labels: labels,
-        datasets: [{
-          data: data,
-          backgroundColor: colors.slice(0, labels.length),
-          borderWidth: 1
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            position: 'bottom',
-            labels: {
-              boxWidth: 12
-            }
-          }
-        }
-      }
-    });
+  // Filter tickets based on selected filters
+  function filterTickets() {
+    // ...existing code...
   }
+  
+  // ... rest of existing code ...
 </script>

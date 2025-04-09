@@ -1,0 +1,1127 @@
+<%- contentFor('body') %>
+
+<div class="dashboard-container">
+  <!-- Left Navbar -->
+  <nav class="navbar">
+    <div class="navbar-header">
+      <div class="logo">
+        <i class="fas fa-headset"></i>
+        <span class="logo-text">Helpdesk</span>
+      </div>
+      <div class="navbar-toggle">
+        <i class="fas fa-bars"></i>
+      </div>
+    </div>
+    
+    <div class="navbar-items">
+      <!-- Admin Navigation -->
+      <a href="/admin/dashboard" class="navbar-item">
+        <i class="fas fa-home"></i>
+        <span>Dashboard</span>
+      </a>
+      <a href="/admin/tickets" class="navbar-item">
+        <i class="fas fa-ticket-alt"></i>
+        <span>All Tickets</span>
+      </a>
+      <a href="/admin/messages" class="navbar-item">
+        <i class="fas fa-comments"></i>
+        <span>Messages</span>
+      </a>
+      <a href="/admin/statistics" class="navbar-item">
+        <i class="fas fa-chart-bar"></i>
+        <span>Statistics</span>
+      </a>
+      <a href="/admin/staff" class="navbar-item active">
+        <i class="fas fa-user-shield"></i>
+        <span>Staff</span>
+      </a>
+      <a href="/admin/users" class="navbar-item">
+        <i class="fas fa-users"></i>
+        <span>Users</span>
+      </a>
+      <a href="/admin/settings" class="navbar-item">
+        <i class="fas fa-cog"></i>
+        <span>Settings</span>
+      </a>
+      
+      <!-- Logout -->
+      <a href="/auth/logout" class="navbar-item">
+        <i class="fas fa-sign-out-alt"></i>
+        <span>Logout</span>
+      </a>
+    </div>
+  </nav>
+  
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Left Panel (Staff Overview) -->
+    <div class="panel left-panel">
+      <div class="panel-header">
+        <h2>Support-ansatte</h2>
+        <div class="panel-actions">
+          <% if (user.role === 'head_admin') { %>
+            <button class="btn btn-primary" id="add-admin-btn">
+              <i class="fas fa-user-plus"></i> Legg til administrator
+            </button>
+          <% } %>
+        </div>
+      </div>
+      <div class="panel-content">
+        <div class="staff-stats">
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-info">
+              <h3>Totalt ansatte</h3>
+              <p class="stat-value" id="total-admins"><%= admins.length %></p>
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-icon available">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-info">
+              <h3>Tilgjengelig</h3>
+              <p class="stat-value" id="available-admins"><%= admins.filter(a => a.status === 'available').length %></p>
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-icon working">
+              <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-info">
+              <h3>Opptatt</h3>
+              <p class="stat-value" id="working-admins"><%= admins.filter(a => a.status === 'working').length %></p>
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-icon offline">
+              <i class="fas fa-power-off"></i>
+            </div>
+            <div class="stat-info">
+              <h3>Frakoblet</h3>
+              <p class="stat-value" id="offline-admins"><%= admins.filter(a => a.status === 'offline').length %></p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="staff-list">
+          <div class="table-responsive">
+            <table class="staff-table">
+              <thead>
+                <tr>
+                  <th>Navn</th>
+                  <th>Status</th>
+                  <th>Spesialiseringer</th>
+                  <th>Aktive chatter</th>
+                  <th>Tildelte saker</th>
+                  <th>Handlinger</th>
+                </tr>
+              </thead>
+              <tbody id="admin-list">
+                <% admins.forEach(admin => { %>
+                  <tr class="admin-row" data-id="<%= admin._id %>">
+                    <td>
+                      <div class="admin-info">
+                        <span class="admin-avatar"><%= admin.name.charAt(0).toUpperCase() %></span>
+                        <div>
+                          <span class="admin-name"><%= admin.name %></span>
+                          <span class="admin-email"><%= admin.email %></span>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="status-badge <%= admin.status %>">
+                        <%= admin.status.charAt(0).toUpperCase() + admin.status.slice(1) %>
+                      </span>
+                    </td>
+                    <td>
+                      <div class="admin-specializations">
+                        <% if (admin.specializations && admin.specializations.length > 0) { %>
+                          <% admin.specializations.forEach(spec => { %>
+                            <span class="specialization-chip"><%= spec.charAt(0).toUpperCase() + spec.slice(1) %></span>
+                          <% }) %>
+                        <% } else { %>
+                          <span class="no-specializations">None</span>
+                        <% } %>
+                      </div>
+                    </td>
+                    <td><%= admin.activeChats ? admin.activeChats.length : 0 %> / <%= admin.maxConcurrentChats || 3 %></td>
+                    <td><%= admin.assignedTickets ? admin.assignedTickets.length : 0 %></td>
+                    <td>
+                      <div class="admin-actions">
+                        <button class="btn btn-sm btn-info view-admin" data-id="<%= admin._id %>">
+                          <i class="fas fa-eye"></i>
+                        </button>
+                        <% if (user.role === 'head_admin' && user._id.toString() !== admin._id.toString()) { %>
+                          <button class="btn btn-sm btn-warning edit-admin" data-id="<%= admin._id %>">
+                            <i class="fas fa-edit"></i>
+                          </button>
+                        <% } %>
+                      </div>
+                    </td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Panel Divider -->
+    <div class="panel-divider">
+      <span class="divider-icon">⋮⋮</span>
+    </div>
+    
+    <!-- Right Panel (Admin Details) -->
+    <div class="panel right-panel">
+      <div class="panel-header">
+        <h2 id="detail-header">Ansattdetaljer</h2>
+      </div>
+      <div class="panel-content">
+        <div class="empty-state" id="empty-details">
+          <div class="empty-icon">
+            <i class="fas fa-user-shield"></i>
+          </div>
+          <h3>Ingen administrator valgt</h3>
+          <p>Velg en administrator fra listen for å se detaljer.</p>
+        </div>
+        
+        <div id="admin-details" style="display: none;">
+          <!-- Admin details will be loaded here -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Admin Modal -->
+<div id="add-admin-modal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h2>Legg til ny administrator</h2>
+    <form id="add-admin-form">
+      <div class="form-group">
+        <label for="admin-name">Navn</label>
+        <input type="text" id="admin-name" name="name" required>
+      </div>
+      <div class="form-group">
+        <label for="admin-email">E-post</label>
+        <input type="email" id="admin-email" name="email" required>
+      </div>
+      <div class="form-group">
+        <label for="admin-password">Passord</label>
+        <input type="password" id="admin-password" name="password" required>
+      </div>
+      <div class="form-group">
+        <label>Spesialiseringer</label>
+        <div class="specializations-options">
+          <label class="checkbox-container">
+            <input type="checkbox" name="specializations" value="technical">
+            <span class="checkmark"></span>
+            Tekniske problemer
+          </label>
+          <label class="checkbox-container">
+            <input type="checkbox" name="specializations" value="account">
+            <span class="checkmark"></span>
+            Kontoproblemer
+          </label>
+          <label class="checkbox-container">
+            <input type="checkbox" name="specializations" value="billing">
+            <span class="checkmark"></span>
+            Fakturering
+          </label>
+          <label class="checkbox-container">
+            <input type="checkbox" name="specializations" value="feature">
+            <span class="checkmark"></span>
+            Funksjonsforespørsler
+          </label>
+          <label class="checkbox-container">
+            <input type="checkbox" name="specializations" value="other">
+            <span class="checkmark"></span>
+            Annet
+          </label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="admin-max-chats">Maks. samtidige chatter</label>
+        <input type="number" id="admin-max-chats" name="maxConcurrentChats" min="1" max="10" value="3">
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Opprett administrator</button>
+    </form>
+  </div>
+</div>
+
+<!-- Edit Admin Modal -->
+<div id="edit-admin-modal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h2>Rediger administrator</h2>
+    <form id="edit-admin-form">
+      <input type="hidden" id="edit-admin-id">
+      <div class="form-group">
+        <label for="edit-admin-status">Status</label>
+        <select id="edit-admin-status" name="status">
+          <option value="available">Tilgjengelig</option>
+          <option value="working">Opptatt</option>
+          <option value="offline">Frakoblet</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Spesialiseringer</label>
+        <div class="specializations-options" id="edit-specializations">
+          <label class="checkbox-container">
+            <input type="checkbox" name="specializations" value="technical">
+            <span class="checkmark"></span>
+            Tekniske problemer
+          </label>
+          <label class="checkbox-container">
+            <input type="checkbox" name="specializations" value="account">
+            <span class="checkmark"></span>
+            Kontoproblemer
+          </label>
+          <label class="checkbox-container">
+            <input type="checkbox" name="specializations" value="billing">
+            <span class="checkmark"></span>
+            Fakturering
+          </label>
+          <label class="checkbox-container">
+            <input type="checkbox" name="specializations" value="feature">
+            <span class="checkmark"></span>
+            Funksjonsforespørsler
+          </label>
+          <label class="checkbox-container">
+            <input type="checkbox" name="specializations" value="other">
+            <span class="checkmark"></span>
+            Annet
+          </label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="edit-max-chats">Maks. samtidige chatter</label>
+        <input type="number" id="edit-max-chats" name="maxConcurrentChats" min="1" max="10" value="3">
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Oppdater administrator</button>
+    </form>
+  </div>
+</div>
+
+<!-- Admin Details Template -->
+<template id="admin-detail-template">
+  <div class="admin-detail-card">
+    <div class="admin-detail-header">
+      <div class="admin-detail-avatar"></div>
+      <div class="admin-detail-basic">
+        <h3 class="admin-detail-name"></h3>
+        <p class="admin-detail-email"></p>
+        <div class="admin-detail-status"></div>
+      </div>
+    </div>
+    
+    <div class="admin-detail-stats">
+      <div class="detail-stat-item">
+        <h4>Workload</h4>
+        <div class="workload-meter">
+          <div class="workload-bar"></div>
+          <span class="workload-text"></span>
+        </div>
+      </div>
+      
+      <div class="detail-stat-item">
+        <h4>Performance</h4>
+        <div class="detail-stat-row">
+          <div class="detail-stat-label">Avg Response Time</div>
+          <div class="detail-stat-value response-time"></div>
+        </div>
+        <div class="detail-stat-row">
+          <div class="detail-stat-label">Tickets Resolved</div>
+          <div class="detail-stat-value tickets-resolved"></div>
+        </div>
+        <div class="detail-stat-row">
+          <div class="detail-stat-label">Satisfaction Rating</div>
+          <div class="detail-stat-value satisfaction"></div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="admin-detail-specializations">
+      <h4>Specializations</h4>
+      <div class="specializations-list"></div>
+    </div>
+    
+    <div class="admin-detail-section">
+      <h4>Active Chats</h4>
+      <div class="admin-active-chats"></div>
+    </div>
+    
+    <div class="admin-detail-section">
+      <h4>Assigned Tickets</h4>
+      <div class="admin-assigned-tickets"></div>
+    </div>
+    
+    <div class="admin-detail-actions">
+      <% if (user.role === 'head_admin') { %>
+        <button class="btn btn-primary assign-ticket">
+          <i class="fas fa-ticket-alt"></i> Assign Ticket
+        </button>
+        <button class="btn btn-success send-message">
+          <i class="fas fa-comment"></i> Send Message
+        </button>
+      <% } %>
+    </div>
+  </div>
+</template>
+
+<% contentFor('script') %>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  let socket;
+  let selectedAdminId = null;
+  let admins = <%- JSON.stringify(admins) %>;
+  
+  document.addEventListener('DOMContentLoaded', function() {
+    // Initialize socket connection
+    initSocket();
+    
+    // View admin details
+    const viewButtons = document.querySelectorAll('.view-admin');
+    viewButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const adminId = this.getAttribute('data-id');
+        viewAdminDetails(adminId);
+      });
+    });
+    
+    // Edit admin buttons
+    const editButtons = document.querySelectorAll('.edit-admin');
+    editButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const adminId = this.getAttribute('data-id');
+        showEditAdminModal(adminId);
+      });
+    });
+    
+    // Add admin button
+    const addAdminBtn = document.getElementById('add-admin-btn');
+    if (addAdminBtn) {
+      addAdminBtn.addEventListener('click', showAddAdminModal);
+    }
+    
+    // Close modal buttons
+    const closeButtons = document.querySelectorAll('.modal .close');
+    closeButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        this.closest('.modal').style.display = 'none';
+      });
+    });
+    
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+      if (event.target.classList.contains('modal')) {
+        event.target.style.display = 'none';
+      }
+    };
+    
+    // Add admin form submission
+    const addAdminForm = document.getElementById('add-admin-form');
+    if (addAdminForm) {
+      addAdminForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        addAdmin(this);
+      });
+    }
+    
+    // Edit admin form submission
+    const editAdminForm = document.getElementById('edit-admin-form');
+    if (editAdminForm) {
+      editAdminForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        updateAdmin(this);
+      });
+    }
+  });
+  
+  function initSocket() {
+    socket = io();
+    
+    socket.on('connect', function() {
+      console.log('Connected to socket server');
+      
+      // Request current admin statuses
+      socket.emit('request-admin-statuses');
+    });
+    
+    // Listen for admin status updates
+    socket.on('admin-status-changed', function(data) {
+      updateAdminStatus(data.adminId, data.status);
+    });
+    
+    // Listen for admin metrics updates
+    socket.on('admin-metrics', function(data) {
+      updateAdminMetrics(data);
+    });
+    
+    // Listen for all admin statuses
+    socket.on('admin-statuses', function(data) {
+      admins = data.admins;
+      updateAdminTable();
+      
+      // If an admin is selected, refresh their details
+      if (selectedAdminId) {
+        viewAdminDetails(selectedAdminId);
+      }
+    });
+    
+    // Request metrics periodically
+    setInterval(function() {
+      socket.emit('request-admin-metrics');
+      socket.emit('request-admin-statuses');
+    }, 30000); // Every 30 seconds
+  }
+  
+  function updateAdminStatus(adminId, status) {
+    // Update the admin in our local data
+    const admin = admins.find(a => a.id === adminId);
+    if (admin) {
+      admin.status = status;
+    }
+    
+    // Update the status badge in the table
+    const statusBadge = document.querySelector(`.admin-row[data-id="${adminId}"] .status-badge`);
+    if (statusBadge) {
+      // Remove existing status classes
+      statusBadge.classList.remove('available', 'working', 'offline');
+      // Add new status class
+      statusBadge.classList.add(status);
+      // Update text
+      statusBadge.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+    }
+    
+    // Update counts
+    updateStatusCounts();
+    
+    // Update admin details if this admin is selected
+    if (selectedAdminId === adminId) {
+      viewAdminDetails(adminId);
+    }
+  }
+  
+  function updateStatusCounts() {
+    const availableCount = admins.filter(a => a.status === 'available').length;
+    const workingCount = admins.filter(a => a.status === 'working').length;
+    const offlineCount = admins.filter(a => a.status === 'offline').length;
+    
+    document.getElementById('available-admins').textContent = availableCount;
+    document.getElementById('working-admins').textContent = workingCount;
+    document.getElementById('offline-admins').textContent = offlineCount;
+  }
+  
+  function updateAdminTable() {
+    const adminList = document.getElementById('admin-list');
+    adminList.innerHTML = '';
+    
+    admins.forEach(admin => {
+      const row = document.createElement('tr');
+      row.className = 'admin-row';
+      row.setAttribute('data-id', admin.id);
+      
+      row.innerHTML = `
+        <td>
+          <div class="admin-info">
+            <span class="admin-avatar">${admin.name.charAt(0).toUpperCase()}</span>
+            <div>
+              <span class="admin-name">${admin.name}</span>
+              <span class="admin-email">${admin.email}</span>
+            </div>
+          </div>
+        </td>
+        <td>
+          <span class="status-badge ${admin.status}">
+            ${admin.status.charAt(0).toUpperCase() + admin.status.slice(1)}
+          </span>
+        </td>
+        <td>
+          <div class="admin-specializations">
+            ${admin.specializations && admin.specializations.length > 0 ? 
+              admin.specializations.map(spec => 
+                `<span class="specialization-chip">${spec.charAt(0).toUpperCase() + spec.slice(1)}</span>`
+              ).join('') : 
+              '<span class="no-specializations">None</span>'}
+          </div>
+        </td>
+        <td>${admin.activeChats || 0} / ${admin.maxChats || 3}</td>
+        <td>${admin.assignedTickets || 0}</td>
+        <td>
+          <div class="admin-actions">
+            <button class="btn btn-sm btn-info view-admin" data-id="${admin.id}">
+              <i class="fas fa-eye"></i>
+            </button>
+            ${user.role === 'head_admin' && user._id !== admin.id ? 
+              `<button class="btn btn-sm btn-warning edit-admin" data-id="${admin.id}">
+                <i class="fas fa-edit"></i>
+              </button>` : ''}
+          </div>
+        </td>
+      `;
+      
+      adminList.appendChild(row);
+      
+      // Add event listeners
+      row.querySelector('.view-admin').addEventListener('click', function() {
+        viewAdminDetails(admin.id);
+      });
+      
+      const editBtn = row.querySelector('.edit-admin');
+      if (editBtn) {
+        editBtn.addEventListener('click', function() {
+          showEditAdminModal(admin.id);
+        });
+      }
+    });
+    
+    // Update counts
+    updateStatusCounts();
+  }
+  
+  function viewAdminDetails(adminId) {
+    selectedAdminId = adminId;
+    
+    const admin = admins.find(a => a.id === adminId);
+    if (!admin) return;
+    
+    // Hide empty state and show details
+    document.getElementById('empty-details').style.display = 'none';
+    const detailsContainer = document.getElementById('admin-details');
+    detailsContainer.style.display = 'block';
+    
+    // Clone template
+    const template = document.getElementById('admin-detail-template');
+    const detailContent = document.importNode(template.content, true);
+    
+    // Fill in details
+    detailContent.querySelector('.admin-detail-avatar').textContent = admin.name.charAt(0).toUpperCase();
+    detailContent.querySelector('.admin-detail-name').textContent = admin.name;
+    detailContent.querySelector('.admin-detail-email').textContent = admin.email;
+    
+    // Status
+    const statusBadge = document.createElement('span');
+    statusBadge.className = `status-badge ${admin.status}`;
+    statusBadge.textContent = admin.status.charAt(0).toUpperCase() + admin.status.slice(1);
+    detailContent.querySelector('.admin-detail-status').appendChild(statusBadge);
+    
+    // Workload
+    const workloadPercentage = Math.min(100, Math.round((admin.activeChats || 0) / (admin.maxChats || 3) * 100));
+    detailContent.querySelector('.workload-bar').style.width = `${workloadPercentage}%`;
+    detailContent.querySelector('.workload-text').textContent = `${admin.activeChats || 0} / ${admin.maxChats || 3} chats`;
+    
+    // Set workload bar color based on percentage
+    if (workloadPercentage < 50) {
+      detailContent.querySelector('.workload-bar').className = 'workload-bar low';
+    } else if (workloadPercentage < 80) {
+      detailContent.querySelector('.workload-bar').className = 'workload-bar medium';
+    } else {
+      detailContent.querySelector('.workload-bar').className = 'workload-bar high';
+    }
+    
+    // Performance metrics (placeholder data)
+    detailContent.querySelector('.response-time').textContent = '2,5 min';
+    detailContent.querySelector('.tickets-resolved').textContent = '42';
+    detailContent.querySelector('.satisfaction').textContent = '4,8/5';
+    
+    // Specializations
+    const specList = detailContent.querySelector('.specializations-list');
+    if (admin.specializations && admin.specializations.length > 0) {
+      const specTranslations = {
+        'technical': 'Teknisk',
+        'account': 'Konto',
+        'billing': 'Fakturering',
+        'feature': 'Funksjonalitet',
+        'other': 'Annet'
+      };
+      
+      admin.specializations.forEach(spec => {
+        const badge = document.createElement('span');
+        badge.className = 'specialization-badge';
+        badge.textContent = specTranslations[spec] || spec.charAt(0).toUpperCase() + spec.slice(1);
+        specList.appendChild(badge);
+      });
+    } else {
+      const noSpec = document.createElement('p');
+      noSpec.className = 'no-specializations';
+      noSpec.textContent = 'Ingen spesialiseringer satt';
+      specList.appendChild(noSpec);
+    }
+    
+    // Active chats
+    const chatsList = detailContent.querySelector('.admin-active-chats');
+    if (admin.activeChats && admin.activeChats.length > 0) {
+      chatsList.textContent = `${admin.activeChats} aktive chatter`;
+    } else {
+      const noChats = document.createElement('p');
+      noChats.className = 'no-items';
+      noChats.textContent = 'Ingen aktive chatter';
+      chatsList.appendChild(noChats);
+    }
+    
+    // Assigned tickets
+    const ticketsList = detailContent.querySelector('.admin-assigned-tickets');
+    if (admin.assignedTickets && admin.assignedTickets.length > 0) {
+      ticketsList.textContent = `${admin.assignedTickets} tildelte saker`;
+    } else {
+      const noTickets = document.createElement('p');
+      noTickets.className = 'no-items';
+      noTickets.textContent = 'Ingen tildelte saker';
+      ticketsList.appendChild(noTickets);
+    }
+    
+    // Clear previous content and add new content
+    detailsContainer.innerHTML = '';
+    detailsContainer.appendChild(detailContent);
+    
+    // Update header
+    document.getElementById('detail-header').textContent = `${admin.name}'s Details`;
+    
+    // Add event listeners for action buttons
+    const assignTicketBtn = detailsContainer.querySelector('.assign-ticket');
+    if (assignTicketBtn) {
+      assignTicketBtn.addEventListener('click', function() {
+        // Redirect to tickets page with admin pre-selected
+        window.location.href = `/admin/tickets?assignTo=${adminId}`;
+      });
+    }
+    
+    const sendMessageBtn = detailsContainer.querySelector('.send-message');
+    if (sendMessageBtn) {
+      sendMessageBtn.addEventListener('click', function() {
+        // Redirect to messages with this admin
+        window.location.href = `/admin/messages?to=${adminId}`;
+      });
+    }
+  }
+  
+  function showAddAdminModal() {
+    document.getElementById('add-admin-modal').style.display = 'block';
+  }
+  
+  function showEditAdminModal(adminId) {
+    const admin = admins.find(a => a.id === adminId);
+    if (!admin) return;
+    
+    // Set form values
+    document.getElementById('edit-admin-id').value = adminId;
+    document.getElementById('edit-admin-status').value = admin.status;
+    document.getElementById('edit-max-chats').value = admin.maxChats || 3;
+    
+    // Set specializations
+    const specCheckboxes = document.querySelectorAll('#edit-specializations input[type="checkbox"]');
+    specCheckboxes.forEach(checkbox => {
+      checkbox.checked = admin.specializations && admin.specializations.includes(checkbox.value);
+    });
+    
+    // Show modal
+    document.getElementById('edit-admin-modal').style.display = 'block';
+  }
+  
+  function addAdmin(form) {
+    const formData = new FormData(form);
+    
+    // Convert to JSON
+    const data = {
+      name: formData.get('name'),
+      email: formData.get('email'),
+      password: formData.get('password'),
+      specializations: formData.getAll('specializations'),
+      maxConcurrentChats: formData.get('maxConcurrentChats'),
+      role: 'admin'
+    };
+    
+    // Send request
+    fetch('/admin/users/add', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          if (window.notifications) {
+            window.notifications.success('Administrator lagt til');
+          }
+          
+          // Close modal and refresh page
+          document.getElementById('add-admin-modal').style.display = 'none';
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
+        } else {
+          if (window.notifications) {
+            window.notifications.error(data.message || 'Kunne ikke legge til administrator');
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Error adding admin:', error);
+        if (window.notifications) {
+          window.notifications.error('Det oppstod en feil');
+        }
+      });
+  }
+  
+  function updateAdmin(form) {
+    const formData = new FormData(form);
+    const adminId = document.getElementById('edit-admin-id').value;
+    
+    // Convert to JSON
+    const data = {
+      status: formData.get('status'),
+      specializations: formData.getAll('specializations'),
+      maxConcurrentChats: formData.get('maxConcurrentChats')
+    };
+    
+    // Send request
+    fetch(`/admin/users/${adminId}/update`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          if (window.notifications) {
+            window.notifications.success('Administrator oppdatert');
+          }
+          
+          // Close modal
+          document.getElementById('edit-admin-modal').style.display = 'none';
+          
+          // Request updated admin data
+          socket.emit('request-admin-statuses');
+        } else {
+          if (window.notifications) {
+            window.notifications.error(data.message || 'Kunne ikke oppdatere administrator');
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Error updating admin:', error);
+        if (window.notifications) {
+          window.notifications.error('Det oppstod en feil');
+        }
+      });
+  }
+</script>
+<style>
+  .staff-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+  }
+  
+  .staff-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .staff-table th,
+  .staff-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+  }
+  
+  .staff-table th {
+    background-color: var(--light-color);
+    font-weight: 600;
+  }
+  
+  .staff-table tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+  }
+  
+  .admin-info {
+    display: flex;
+    align-items: center;
+  }
+  
+  .admin-avatar {
+    width: 36px;
+    height: 36px;
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    margin-right: 12px;
+  }
+  
+  .admin-name {
+    display: block;
+    font-weight: 600;
+  }
+  
+  .admin-email {
+    display: block;
+    font-size: 12px;
+    color: var(--gray-color);
+  }
+  
+  .admin-specializations {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  
+  .specialization-chip {
+    font-size: 12px;
+    padding: 2px 8px;
+    background-color: var(--light-color);
+    border-radius: 12px;
+  }
+  
+  .no-specializations {
+    font-style: italic;
+    color: var(--gray-color);
+    font-size: 12px;
+  }
+  
+  .admin-actions {
+    display: flex;
+    gap: 5px;
+  }
+  
+  .table-responsive {
+    overflow-x: auto;
+  }
+  
+  .status-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  
+  .status-badge.available {
+    background-color: rgba(46, 204, 113, 0.1);
+    color: var(--success-color);
+  }
+  
+  .status-badge.working {
+    background-color: rgba(241, 196, 15, 0.1);
+    color: var(--warning-color);
+  }
+  
+  .status-badge.offline {
+    background-color: rgba(189, 195, 199, 0.1);
+    color: var(--gray-color);
+  }
+  
+  /* Admin Detail Card Styles */
+  .admin-detail-card {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+  }
+  
+  .admin-detail-header {
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    background-color: var(--primary-light);
+  }
+  
+  .admin-detail-avatar {
+    width: 64px;
+    height: 64px;
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 600;
+    margin-right: 20px;
+  }
+  
+  .admin-detail-basic {
+    flex: 1;
+  }
+  
+  .admin-detail-name {
+    margin: 0 0 5px 0;
+    font-size: 20px;
+  }
+  
+  .admin-detail-email {
+    margin: 0 0 10px 0;
+    color: var(--gray-color);
+  }
+  
+  .admin-detail-stats {
+    padding: 20px;
+    border-bottom: 1px solid var(--border-color);
+  }
+  
+  .detail-stat-item {
+    margin-bottom: 20px;
+  }
+  
+  .detail-stat-item h4 {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+  }
+  
+  .workload-meter {
+    height: 10px;
+    background-color: #f1f1f1;
+    border-radius: 5px;
+    position: relative;
+    margin-bottom: 5px;
+  }
+  
+  .workload-bar {
+    height: 100%;
+    border-radius: 5px;
+    background-color: var(--success-color);
+  }
+  
+  .workload-bar.low {
+    background-color: var(--success-color);
+  }
+  
+  .workload-bar.medium {
+    background-color: var(--warning-color);
+  }
+  
+  .workload-bar.high {
+    background-color: var(--danger-color);
+  }
+  
+  .workload-text {
+    font-size: 12px;
+    color: var(--gray-color);
+  }
+  
+  .detail-stat-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  
+  .detail-stat-label {
+    color: var(--gray-color);
+  }
+  
+  .detail-stat-value {
+    font-weight: 600;
+  }
+  
+  .admin-detail-specializations,
+  .admin-detail-section {
+    padding: 20px;
+    border-bottom: 1px solid var(--border-color);
+  }
+  
+  .admin-detail-specializations h4,
+  .admin-detail-section h4 {
+    margin: 0 0 15px 0;
+    font-size: 16px;
+  }
+  
+  .specializations-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .specialization-badge {
+    display: inline-block;
+    padding: 5px 10px;
+    background-color: #f1f1f1;
+    border-radius: 20px;
+    font-size: 14px;
+  }
+  
+  .no-items {
+    font-style: italic;
+    color: var(--gray-color);
+  }
+  
+  .admin-detail-actions {
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  
+  .admin-detail-actions button {
+    flex: 1;
+  }
+  
+  /* Modal Styles for Add/Edit Admin */
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+  
+  .modal-content {
+    background-color: white;
+    margin: 50px auto;
+    padding: 30px;
+    border-radius: 8px;
+    max-width: 500px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    position: relative;
+  }
+  
+  .close {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--gray-color);
+    cursor: pointer;
+  }
+  
+  .close:hover {
+    color: var(--dark-color);
+  }
+  
+  @media (max-width: 768px) {
+    .admin-detail-actions {
+      flex-direction: column;
+    }
+    
+    .admin-actions {
+      flex-direction: column;
+      gap: 5px;
+    }
+    
+    .status-badge {
+      margin-bottom: 5px;
+      display: inline-block;
+    }
+  }
+</style>

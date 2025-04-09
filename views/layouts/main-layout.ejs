@@ -1,11 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="no">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= title %> - Helpdesk Ticket System</title>
+  <title><%= title %> - Helpdesk Billettsystem</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/notifications.css">
+  <% if (typeof user !== 'undefined' && (user.role === 'admin' || user.role === 'head_admin')) { %>
+    <link rel="stylesheet" href="/css/admin-status.css">
+  <% } %>
   <%- typeof style !== 'undefined' ? style : '' %>
 </head>
 <body data-user-id="<%= typeof user !== 'undefined' ? user._id : '' %>" 
@@ -31,6 +35,9 @@
   <%- body %>
   
   <script src="/js/notifications.js"></script>
+  <% if (typeof user !== 'undefined' && (user.role === 'admin' || user.role === 'head_admin')) { %>
+    <script src="/js/adminStatus.js"></script>
+  <% } %>
   <%- typeof script !== 'undefined' ? script : '' %>
   
   <script>
@@ -61,8 +68,8 @@
         console.warn('Socket connection failed or not established');
         if (window.notifications) {
           window.notifications.warning(
-            'Some real-time features may be unavailable. Please try logging out and back in.',
-            'Connection Issue'
+            'Noen sanntidsfunksjoner kan være utilgjengelige. Vennligst prøv å logge ut og inn igjen.',
+            'Tilkoblingsproblem'
           );
         }
       }

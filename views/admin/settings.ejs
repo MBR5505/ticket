@@ -1,0 +1,456 @@
+<%- contentFor('body') %>
+
+<div class="dashboard-container">
+  <!-- Left Navbar -->
+  <nav class="navbar">
+    <div class="navbar-header">
+      <div class="logo">
+        <i class="fas fa-headset"></i>
+        <span class="logo-text">Helpdesk</span>
+      </div>
+      <div class="navbar-toggle">
+        <i class="fas fa-bars"></i>
+      </div>
+    </div>
+    
+    <div class="navbar-items">
+      <!-- Admin Navigation -->
+      <a href="/admin/dashboard" class="navbar-item">
+        <i class="fas fa-home"></i>
+        <span>Dashboard</span>
+      </a>
+      <a href="/admin/tickets" class="navbar-item">
+        <i class="fas fa-ticket-alt"></i>
+        <span>All Tickets</span>
+      </a>
+      <a href="/admin/messages" class="navbar-item">
+        <i class="fas fa-comments"></i>
+        <span>Messages</span>
+      </a>
+      <a href="/admin/statistics" class="navbar-item">
+        <i class="fas fa-chart-bar"></i>
+        <span>Statistics</span>
+      </a>
+      <% if (user.role === 'head_admin') { %>
+        <a href="/admin/users" class="navbar-item">
+          <i class="fas fa-users"></i>
+          <span>Users</span>
+        </a>
+      <% } %>
+      <a href="/admin/settings" class="navbar-item active">
+        <i class="fas fa-cog"></i>
+        <span>Settings</span>
+      </a>
+      
+      <!-- Logout -->
+      <a href="/auth/logout" class="navbar-item">
+        <i class="fas fa-sign-out-alt"></i>
+        <span>Logout</span>
+      </a>
+    </div>
+  </nav>
+  
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Left Panel (Settings) -->
+    <div class="panel left-panel">
+      <div class="panel-header">
+        <h2>Admin Settings</h2>
+        <div class="panel-actions">
+          <div class="admin-status-indicator">
+            <span class="status-dot <%= user.status %>"></span>
+            <span class="status-text">
+              <%= user.status === 'available' ? 'Available' : 
+                 user.status === 'working' ? 'Working' : 'Offline' %>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="panel-content">
+        <div class="settings-container">
+          <form action="/admin/settings/update" method="POST" id="admin-settings-form">
+            <div class="settings-section">
+              <h3>Tilgjengelighetsstatus</h3>
+              <p class="section-description">Sett din tilgjengelighet for nye chatforespørsler.</p>
+              
+              <div class="status-options">
+                <label class="status-option available <%= user.status === 'available' ? 'active' : '' %>">
+                  <input type="radio" name="status" value="available" <%= user.status === 'available' ? 'checked' : '' %>>
+                  <div class="status-icon">
+                    <i class="fas fa-check-circle"></i>
+                  </div>
+                  <span>Tilgjengelig</span>
+                  <p>Du er klar til å ta nye chatforespørsler</p>
+                </label>
+                
+                <label class="status-option working <%= user.status === 'working' ? 'active' : '' %>">
+                  <input type="radio" name="status" value="working" <%= user.status === 'working' ? 'checked' : '' %>>
+                  <div class="status-icon">
+                    <i class="fas fa-clock"></i>
+                  </div>
+                  <span>Opptatt</span>
+                  <p>Tildelt til deg kun ved høyt behov</p>
+                </label>
+                
+                <label class="status-option offline <%= user.status === 'offline' ? 'active' : '' %>">
+                  <input type="radio" name="status" value="offline" <%= user.status === 'offline' ? 'checked' : '' %>>
+                  <div class="status-icon">
+                    <i class="fas fa-times-circle"></i>
+                  </div>
+                  <span>Frakoblet</span>
+                  <p>Ingen nye chatforespørsler vil bli tildelt</p>
+                </label>
+              </div>
+            </div>
+            
+            <div class="settings-section">
+              <h3>Support-spesialiseringer</h3>
+              <p class="section-description">Velg kategoriene du spesialiserer deg på for automatisk chat-ruting.</p>
+              
+              <div class="specializations-options">
+                <label class="checkbox-container">
+                  <input type="checkbox" name="specializations" value="technical" 
+                         <%= user.specializations && user.specializations.includes('technical') ? 'checked' : '' %>>
+                  <span class="checkmark"></span>
+                  Tekniske problemer
+                </label>
+                
+                <label class="checkbox-container">
+                  <input type="checkbox" name="specializations" value="account" 
+                         <%= user.specializations && user.specializations.includes('account') ? 'checked' : '' %>>
+                  <span class="checkmark"></span>
+                  Kontoproblemer
+                </label>
+                
+                <label class="checkbox-container">
+                  <input type="checkbox" name="specializations" value="billing" 
+                         <%= user.specializations && user.specializations.includes('billing') ? 'checked' : '' %>>
+                  <span class="checkmark"></span>
+                  Faktureringsspørsmål
+                </label>
+                
+                <label class="checkbox-container">
+                  <input type="checkbox" name="specializations" value="feature" 
+                         <%= user.specializations && user.specializations.includes('feature') ? 'checked' : '' %>>
+                  <span class="checkmark"></span>
+                  Funksjonsforespørsler
+                </label>
+                
+                <label class="checkbox-container">
+                  <input type="checkbox" name="specializations" value="other" 
+                         <%= user.specializations && user.specializations.includes('other') ? 'checked' : '' %>>
+                  <span class="checkmark"></span>
+                  Annet
+                </label>
+              </div>
+            </div>
+            
+            <div class="settings-section">
+              <h3>Chat-innstillinger</h3>
+              <p class="section-description">Konfigurer dine chat-preferanser.</p>
+              
+              <div class="form-group">
+                <label for="maxConcurrentChats">Maksimalt antall samtidige chatter</label>
+                <div class="input-with-icon">
+                  <i class="fas fa-comments"></i>
+                  <input type="number" id="maxConcurrentChats" name="maxConcurrentChats" 
+                         min="1" max="10" value="<%= user.maxConcurrentChats || 3 %>">
+                </div>
+                <p class="input-hint">Det maksimale antallet samtidige chat-økter du kan håndtere (1-10)</p>
+              </div>
+            </div>
+            
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary">Lagre innstillinger</button>
+              <button type="reset" class="btn btn-secondary">Tilbakestill</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Panel Divider -->
+    <div class="panel-divider">
+      <span class="divider-icon">⋮⋮</span>
+    </div>
+    
+    <!-- Right Panel (Current Status) -->
+    <div class="panel right-panel">
+      <div class="panel-header">
+        <h2>Current Status</h2>
+      </div>
+      <div class="panel-content">
+        <div class="status-container">
+          <div class="current-status-card">
+            <div class="status-header">
+              <div class="status-icon">
+                <i class="fas fa-user-circle"></i>
+              </div>
+              <div class="status-title">
+                <h3><%= user.name %></h3>
+                <p><%= user.role === 'head_admin' ? 'Head Administrator' : 'Administrator' %></p>
+              </div>
+            </div>
+            
+            <div class="status-details">
+              <div class="status-item">
+                <div class="item-label">Current Status</div>
+                <div class="item-value status-<%= user.status %>">
+                  <%= user.status === 'available' ? 'Available' : 
+                     user.status === 'working' ? 'Working' : 'Offline' %>
+                </div>
+              </div>
+              
+              <div class="status-item">
+                <div class="item-label">Active Chats</div>
+                <div class="item-value"><%= user.activeChats ? user.activeChats.length : 0 %> / <%= user.maxConcurrentChats || 3 %></div>
+              </div>
+              
+              <div class="status-item">
+                <div class="item-label">Pending Requests</div>
+                <div class="item-value"><%= user.chatQueue ? user.chatQueue.length : 0 %></div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="quick-status-actions">
+            <h3>Quick Status Update</h3>
+            <div class="quick-actions">
+              <button class="btn btn-success status-btn" data-status="available">
+                <i class="fas fa-check-circle"></i> Available
+              </button>
+              <button class="btn btn-warning status-btn" data-status="working">
+                <i class="fas fa-clock"></i> Working
+              </button>
+              <button class="btn btn-danger status-btn" data-status="offline">
+                <i class="fas fa-times-circle"></i> Offline
+              </button>
+            </div>
+          </div>
+          
+          <div class="specializations-preview">
+            <h3>Your Specializations</h3>
+            <div class="specializations-list">
+              <% if (user.specializations && user.specializations.length > 0) { %>
+                <% user.specializations.forEach(spec => { %>
+                  <span class="specialization-badge"><%= spec.charAt(0).toUpperCase() + spec.slice(1) %></span>
+                <% }); %>
+              <% } else { %>
+                <p class="no-specializations">No specializations set. Add some above to help route relevant tickets to you.</p>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<% contentFor('script') %>
+<script src="/socket.io/socket.io.js"></script>
+<script src="/js/dashboard.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    let socket = io();
+    
+    // Status radio buttons
+    const statusInputs = document.querySelectorAll('input[name="status"]');
+    statusInputs.forEach(input => {
+      input.addEventListener('change', function() {
+        // Remove active class from all options
+        document.querySelectorAll('.status-option').forEach(option => {
+          option.classList.remove('active');
+        });
+        
+        // Add active class to selected option
+        this.closest('.status-option').classList.add('active');
+      });
+    });
+    
+    // Theme radio buttons
+    const themeInputs = document.querySelectorAll('input[name="theme"]');
+    themeInputs.forEach(input => {
+      input.addEventListener('change', function() {
+        // Remove active class from all options
+        document.querySelectorAll('.theme-option').forEach(option => {
+          option.classList.remove('active');
+        });
+        
+        // Add active class to selected option
+        this.closest('.theme-option').classList.add('active');
+      });
+    });
+    
+    // Quick status buttons
+    const statusButtons = document.querySelectorAll('.status-btn');
+    statusButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const status = this.getAttribute('data-status');
+        updateStatus(status);
+      });
+    });
+    
+    // Form submission
+    const settingsForm = document.getElementById('admin-settings-form');
+    settingsForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      // Get form data
+      const formData = new FormData(this);
+      
+      // Convert to JSON
+      const data = {};
+      for (const [key, value] of formData.entries()) {
+        if (key === 'specializations') {
+          if (!data[key]) {
+            data[key] = [];
+          }
+          data[key].push(value);
+        } else {
+          data[key] = value;
+        }
+      }
+      
+      // Submit form
+      fetch('/admin/settings/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            // Update status via socket for real-time updates
+            socket.emit('admin-status-change', { 
+              status: formData.get('status'),
+              specializations: Array.from(formData.getAll('specializations'))
+            });
+            
+            if (window.notifications) {
+              window.notifications.success('Settings updated successfully');
+            }
+            
+            // Update UI
+            updateUI(data.user);
+          } else {
+            if (window.notifications) {
+              window.notifications.error(data.message);
+            }
+          }
+        })
+        .catch(error => {
+          console.error('Error updating settings:', error);
+          if (window.notifications) {
+            window.notifications.error('Failed to update settings');
+          }
+        });
+    });
+  });
+  
+  function updateStatus(status) {
+    fetch('/admin/settings/update', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ status })
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          if (window.notifications) {
+            window.notifications.success(`Status updated to ${status}`);
+          }
+          
+          // Update radio buttons
+          document.querySelectorAll('.status-option').forEach(option => {
+            option.classList.remove('active');
+          });
+          
+          const selectedOption = document.querySelector(`.status-option.${status}`);
+          if (selectedOption) {
+            selectedOption.classList.add('active');
+            selectedOption.querySelector('input').checked = true;
+          }
+          
+          // Update status indicators
+          updateStatusIndicators(status);
+          
+          // Emit socket event
+          if (window.socket) {
+            window.socket.emit('admin-status-change', { status });
+          }
+        } else {
+          if (window.notifications) {
+            window.notifications.error(data.message);
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Error updating status:', error);
+        if (window.notifications) {
+          window.notifications.error('Failed to update status');
+        }
+      });
+  }
+  
+  function updateStatusIndicators(status) {
+    // Update top bar indicator
+    const statusDot = document.querySelector('.admin-status-indicator .status-dot');
+    const statusText = document.querySelector('.admin-status-indicator .status-text');
+    
+    if (statusDot) {
+      statusDot.className = `status-dot ${status}`;
+    }
+    
+    if (statusText) {
+      statusText.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+    }
+    
+    // Update right panel indicator
+    const statusValue = document.querySelector('.status-details .item-value.status-available, .status-details .item-value.status-working, .status-details .item-value.status-offline');
+    
+    if (statusValue) {
+      statusValue.className = `item-value status-${status}`;
+      statusValue.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+    }
+  }
+  
+  function updateUI(user) {
+    // Update status
+    updateStatusIndicators(user.status);
+    
+    // Update specializations
+    const specList = document.querySelector('.specializations-list');
+    if (specList) {
+      specList.innerHTML = '';
+      
+      if (user.specializations && user.specializations.length > 0) {
+        user.specializations.forEach(spec => {
+          const badge = document.createElement('span');
+          badge.className = 'specialization-badge';
+          badge.textContent = spec.charAt(0).toUpperCase() + spec.slice(1);
+          specList.appendChild(badge);
+        });
+      } else {
+        const noSpec = document.createElement('p');
+        noSpec.className = 'no-specializations';
+        noSpec.textContent = 'No specializations set. Add some above to help route relevant tickets to you.';
+        specList.appendChild(noSpec);
+      }
+    }
+    
+    // Update active chats and max chats
+    const activeChatsValue = document.querySelector('.status-item:nth-child(2) .item-value');
+    if (activeChatsValue) {
+      activeChatsValue.textContent = `${user.activeChats ? user.activeChats.length : 0} / ${user.maxConcurrentChats || 3}`;
+    }
+    
+    // Update theme if changed
+    if (user.preferences && user.preferences.theme) {
+      document.body.setAttribute('data-theme', user.preferences.theme);
+    }
+  }
+</script>

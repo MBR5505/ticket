@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+const argon2 = require('argon2'); // Replaced bcrypt with argon2
 const { validationResult } = require('express-validator');
 
 // Generate JWT token
@@ -84,8 +85,9 @@ exports.login = async (req, res) => {
     // Find user by email
     const user = await User.findOne({ email });
     
-    // Check if user exists and password is correct
-    if (!user || !(await user.comparePassword(password))) {
+    // Check if user exists and password is correct using argon2
+    const isPasswordValid = await user.comparePassword(password);
+    if (!user || !isPasswordValid) {
       req.flash('error', 'Invalid email or password');
       return res.redirect('/auth/login');
     }
@@ -143,4 +145,41 @@ exports.getLoginPage = (req, res) => {
   res.render('auth/login', {
     title: 'Login'
   });
+};
+
+// If there's a resetPassword or similar function
+exports.resetPassword = async (req, res) => {
+  try {
+    const { token, password } = req.body;
+    
+    // Find user with this reset token
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() }
+    });
+    
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password reset token is invalid or has expired'
+      });
+    }
+    
+    // Update user password - the User model will handle argon2 hashing
+    user.password = password;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+    
+    res.status(200).json({
+      success: true,
+      message: 'Password has been reset'
+    });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to reset password'
+    });
+  }
 };

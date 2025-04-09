@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const Ticket = require('../models/Ticket');
 const Message = require('../models/Message');
+const argon2 = require('argon2'); // Replaced bcrypt with argon2
 const { formatTimeAgo } = require('./dashboardController');
 
 // Get all users (head admin only)
@@ -67,34 +68,30 @@ exports.createUser = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
     
-    // Check if email already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ success: false, message: 'Email already in use' });
-    }
-    
-    // Validate role - only head admins can create other head admins
-    if (role === 'head_admin' && req.user.role !== 'head_admin') {
-      return res.status(403).json({ 
-        success: false, 
-        message: 'Only head admins can create other head admins' 
-      });
-    }
-    
-    // Create user
-    const user = new User({
+    // Create new user - User model will handle argon2 hashing
+    const user = await User.create({
       name,
       email,
       password,
-      role
+      role: role || 'user'
     });
     
-    await user.save();
-    
-    res.status(201).json({ success: true, user });
+    res.status(201).json({
+      success: true,
+      message: 'User created successfully',
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    });
   } catch (error) {
     console.error('Create user error:', error);
-    res.status(500).json({ success: false, message: 'Failed to create user' });
+    res.status(500).json({
+      success: false,
+      message: 'Failed to create user'
+    });
   }
 };
 
@@ -284,5 +281,509 @@ exports.getAdminStats = async (req, res) => {
     console.error('Get admin stats error:', error);
     req.flash('error', 'Failed to get statistics');
     res.redirect('/admin/dashboard');
+  }
+};
+
+// Get admin settings page
+exports.getAdminSettings = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    
+    res.render('admin/settings', {
+      title: 'Admin Settings',
+      user,
+      activePage: 'settings'
+    });
+  } catch (error) {
+    console.error('Get admin settings error:', error);
+    req.flash('error', 'Failed to load settings');
+    res.redirect('/admin/dashboard');
+  }
+};
+
+// Update admin settings
+exports.updateAdminSettings = async (req, res) => {
+  try {
+    const { status, specializations, maxConcurrentChats, theme } = req.body;
+    
+    const updateData = {};
+    
+    // Update status if provided
+    if (status && ['available', 'working', 'offline'].includes(status)) {
+      updateData.status = status;
+    }
+    
+    // Update specializations if provided
+    if (specializations && Array.isArray(specializations)) {
+      const validCategories = ['technical', 'account', 'billing', 'feature', 'other'];
+      updateData.specializations = specializations.filter(spec => 
+        validCategories.includes(spec)
+      );
+    }
+    
+    // Update max concurrent chats if provided
+    if (maxConcurrentChats) {
+      const maxChats = parseInt(maxConcurrentChats);
+      if (!isNaN(maxChats) && maxChats >= 1 && maxChats <= 10) {
+        updateData.maxConcurrentChats = maxChats;
+      }
+    }
+    
+    // Update theme preference
+    if (theme && ['light', 'dark'].includes(theme)) {
+      updateData['preferences.theme'] = theme;
+    }
+    
+    // Update user with all valid changes
+    const user = await User.findByIdAndUpdate(
+      req.user._id, 
+      updateData, 
+      { new: true }
+    );
+    
+    // If status was updated, notify connected clients
+    if (updateData.status && req.io) {
+      req.io.emit('admin-status-changed', {
+        adminId: req.user._id,
+        status: updateData.status
+      });
+    }
+    
+    // Return JSON if it's an API request
+    if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+      return res.status(200).json({
+        success: true,
+        message: 'Settings updated successfully',
+        user
+      });
+    }
+    
+    // Otherwise redirect with flash message
+    req.flash('success', 'Settings updated successfully');
+    res.redirect('/admin/settings');
+  } catch (error) {
+    console.error('Update admin settings error:', error);
+    
+    // Return JSON if it's an API request
+    if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+      return res.status(500).json({
+        success: false,
+        message: 'Error updating settings'
+      });
+    }
+    
+    req.flash('error', 'Failed to update settings');
+    res.redirect('/admin/settings');
+  }
+};
+
+// Update admin status
+exports.updateAdminStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+    
+    // Validate status
+    if (!['available', 'working', 'offline'].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid status value'
+      });
+    }
+    
+    // Update user status
+    const user = await User.findByIdAndUpdate(
+      req.user._id, 
+      { status }, 
+      { new: true }
+    );
+    
+    // Notify connected clients
+    if (req.io) {
+      req.io.emit('admin-status-changed', {
+        adminId: req.user._id,
+        status
+      });
+    }
+    
+    return res.status(200).json({
+      success: true,
+      message: `Status updated to ${status}`,
+      user
+    });
+  } catch (error) {
+    console.error('Update admin status error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error updating status'
+    });
+  }
+};
+
+// Update admin specializations
+exports.updateSpecializations = async (req, res) => {
+  try {
+    const { specializations } = req.body;
+    
+    if (!Array.isArray(specializations)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Specializations must be an array'
+      });
+    }
+    
+    // Validate specializations
+    const validCategories = ['technical', 'account', 'billing', 'feature', 'other'];
+    const validSpecializations = specializations.filter(spec => 
+      validCategories.includes(spec)
+    );
+    
+    // Update user specializations
+    const user = await User.findByIdAndUpdate(
+      req.user._id, 
+      { specializations: validSpecializations }, 
+      { new: true }
+    );
+    
+    return res.status(200).json({
+      success: true,
+      message: 'Specializations updated successfully',
+      user
+    });
+  } catch (error) {
+    console.error('Update specializations error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error updating specializations'
+    });
+  }
+};
+
+// Update max concurrent chats
+exports.updateMaxChats = async (req, res) => {
+  try {
+    const { maxConcurrentChats } = req.body;
+    
+    // Validate max chats
+    const maxChats = parseInt(maxConcurrentChats);
+    if (isNaN(maxChats) || maxChats < 1 || maxChats > 10) {
+      return res.status(400).json({
+        success: false,
+        message: 'Max concurrent chats must be between 1 and 10'
+      });
+    }
+    
+    // Update user max chats
+    const user = await User.findByIdAndUpdate(
+      req.user._id, 
+      { maxConcurrentChats: maxChats }, 
+      { new: true }
+    );
+    
+    return res.status(200).json({
+      success: true,
+      message: 'Max concurrent chats updated successfully',
+      user
+    });
+  } catch (error) {
+    console.error('Update max chats error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error updating max concurrent chats'
+    });
+  }
+};
+
+// Get staff management page
+exports.getStaffPage = async (req, res) => {
+  try {
+    // Ensure user is head admin
+    if (req.user.role !== 'head_admin') {
+      req.flash('error', 'You do not have permission to access this page');
+      return res.redirect('/admin/dashboard');
+    }
+    
+    // Get all admins
+    const admins = await User.find({ 
+      role: { $in: ['admin', 'head_admin'] }
+    }).select('-password');
+    
+    // For each admin, count their assigned tickets
+    for (let admin of admins) {
+      const assignedTickets = await Ticket.countDocuments({ assignedTo: admin._id });
+      admin = admin.toObject();
+      admin.assignedTickets = assignedTickets;
+    }
+    
+    res.render('admin/staff', {
+      title: 'Staff Management',
+      admins,
+      user: req.user,
+      activePage: 'staff'
+    });
+  } catch (error) {
+    console.error('Get staff page error:', error);
+    req.flash('error', 'Failed to load staff page');
+    res.redirect('/admin/dashboard');
+  }
+};
+
+// Add a new admin
+exports.addAdmin = async (req, res) => {
+  try {
+    // Ensure user is head admin
+    if (req.user.role !== 'head_admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'You do not have permission to perform this action'
+      });
+    }
+    
+    const { name, email, password, specializations, maxConcurrentChats } = req.body;
+    
+    // Check if email already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email already in use'
+      });
+    }
+    
+    // Create new admin
+    const newAdmin = new User({
+      name,
+      email,
+      password, // This will be hashed in the User model pre-save hook
+      role: 'admin',
+      specializations: specializations || [],
+      maxConcurrentChats: maxConcurrentChats || 3,
+      status: 'available'
+    });
+    
+    await newAdmin.save();
+    
+    // Emit socket event for real-time updates
+    if (req.io) {
+      req.io.emit('admin-added', {
+        id: newAdmin._id,
+        name: newAdmin.name,
+        email: newAdmin.email,
+        status: newAdmin.status,
+        specializations: newAdmin.specializations,
+        maxConcurrentChats: newAdmin.maxConcurrentChats
+      });
+    }
+    
+    return res.status(201).json({
+      success: true,
+      message: 'Admin added successfully',
+      admin: {
+        id: newAdmin._id,
+        name: newAdmin.name,
+        email: newAdmin.email
+      }
+    });
+  } catch (error) {
+    console.error('Add admin error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to add admin'
+    });
+  }
+};
+
+// Update admin settings
+exports.updateAdminById = async (req, res) => {
+  try {
+    // Ensure user is head admin
+    if (req.user.role !== 'head_admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'You do not have permission to perform this action'
+      });
+    }
+    
+    const adminId = req.params.id;
+    const { status, specializations, maxConcurrentChats } = req.body;
+    
+    // Get the admin
+    const admin = await User.findById(adminId);
+    
+    if (!admin) {
+      return res.status(404).json({
+        success: false,
+        message: 'Admin not found'
+      });
+    }
+    
+    // Update admin
+    if (status) admin.status = status;
+    if (specializations) admin.specializations = specializations;
+    if (maxConcurrentChats) admin.maxConcurrentChats = maxConcurrentChats;
+    
+    await admin.save();
+    
+    // Emit socket event for real-time updates
+    if (req.io) {
+      req.io.emit('admin-status-changed', {
+        adminId: admin._id,
+        status: admin.status
+      });
+    }
+    
+    return res.status(200).json({
+      success: true,
+      message: 'Admin updated successfully',
+      admin: {
+        id: admin._id,
+        name: admin.name,
+        email: admin.email,
+        status: admin.status,
+        specializations: admin.specializations,
+        maxConcurrentChats: admin.maxConcurrentChats
+      }
+    });
+  } catch (error) {
+    console.error('Update admin error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to update admin'
+    });
+  }
+};
+
+// Get admin performance
+exports.getAdminPerformance = async (req, res) => {
+  try {
+    const adminId = req.params.id;
+    
+    // Get admin details
+    const admin = await User.findById(adminId).select('-password');
+    
+    if (!admin) {
+      return res.status(404).json({
+        success: false,
+        message: 'Admin not found'
+      });
+    }
+    
+    // Get assigned tickets
+    const assignedTickets = await Ticket.find({ assignedTo: adminId });
+    
+    // Calculate metrics
+    const resolvedTickets = assignedTickets.filter(t => t.status === 'resolved').length;
+    const activeChats = admin.activeChats ? admin.activeChats.length : 0;
+    const pendingChats = admin.chatQueue ? admin.chatQueue.length : 0;
+    
+    // Get response time (placeholder data in a real app)
+    const averageResponseTime = '2.5 min'; // This would be calculated from actual messages
+    
+    return res.status(200).json({
+      success: true,
+      performance: {
+        admin: {
+          id: admin._id,
+          name: admin.name,
+          email: admin.email,
+          status: admin.status,
+          specializations: admin.specializations
+        },
+        assignedTickets: assignedTickets.length,
+        resolvedTickets,
+        activeChats,
+        pendingChats,
+        averageResponseTime
+      }
+    });
+  } catch (error) {
+    console.error('Get admin performance error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to get admin performance'
+    });
+  }
+};
+
+// Update admin function to change user password
+exports.updateUserPassword = async (req, res) => {
+  try {
+    const { userId, newPassword } = req.body;
+    
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+    
+    // Update password - User model will handle argon2 hashing
+    user.password = newPassword;
+    await user.save();
+    
+    res.status(200).json({
+      success: true,
+      message: 'Password updated successfully'
+    });
+  } catch (error) {
+    console.error('Update user password error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update password'
+    });
+  }
+};
+
+// Update admin settings
+exports.updateSettings = async (req, res) => {
+  try {
+    const { status, specializations, maxConcurrentChats, theme } = req.body;
+    
+    // Update fields
+    const updateFields = {};
+    
+    if (status) {
+      updateFields.status = status;
+    }
+    
+    if (specializations) {
+      updateFields.specializations = Array.isArray(specializations) ? 
+        specializations : [specializations];
+    }
+    
+    if (maxConcurrentChats) {
+      updateFields.maxConcurrentChats = Math.min(10, Math.max(1, maxConcurrentChats));
+    }
+    
+    if (theme) {
+      updateFields['preferences.theme'] = theme;
+    }
+    
+    // Update user
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      updateFields,
+      { new: true, runValidators: true }
+    );
+    
+    // Emit socket event for status change if applicable
+    if (status && req.io) {
+      req.io.emit('admin-status-changed', {
+        adminId: req.user._id,
+        status
+      });
+    }
+    
+    res.status(200).json({
+      success: true,
+      message: 'Settings updated successfully',
+      user
+    });
+  } catch (error) {
+    console.error('Update settings error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update settings'
+    });
   }
 };

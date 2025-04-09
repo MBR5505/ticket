@@ -48,33 +48,41 @@
           <!-- User Navigation -->
           <a href="/user/dashboard" class="navbar-item <%= activePage === 'dashboard' ? 'active' : '' %>">
             <i class="fas fa-home"></i>
-            <span>Dashboard</span>
+            <span>Dashbord</span>
           </a>
           <a href="/user/tickets" class="navbar-item <%= activePage === 'tickets' ? 'active' : '' %>">
             <i class="fas fa-ticket-alt"></i>
-            <span>My Tickets</span>
+            <span>Mine saker</span>
+          </a>
+          <a href="/user/messages" class="navbar-item <%= activePage === 'messages' ? 'active' : '' %>">
+            <i class="fas fa-comments"></i>
+            <span>Meldinger</span>
           </a>
           <a href="#" class="navbar-item" data-panel="new-ticket-panel">
             <i class="fas fa-plus-circle"></i>
-            <span>New Ticket</span>
+            <span>Ny sak</span>
           </a>
-          <a href="#" class="navbar-item" data-panel="settings-panel">
+          <a href="/user/settings" class="navbar-item <%= activePage === 'settings' ? 'active' : '' %>">
             <i class="fas fa-cog"></i>
-            <span>Settings</span>
+            <span>Innstillinger</span>
           </a>
         <% } else if (user.role === 'admin' || user.role === 'head_admin') { %>
           <!-- Admin Navigation -->
           <a href="/admin/dashboard" class="navbar-item <%= activePage === 'dashboard' ? 'active' : '' %>">
             <i class="fas fa-home"></i>
-            <span>Dashboard</span>
+            <span>Dashbord</span>
           </a>
           <a href="/admin/tickets" class="navbar-item <%= activePage === 'tickets' ? 'active' : '' %>">
             <i class="fas fa-ticket-alt"></i>
-            <span>All Tickets</span>
+            <span>Alle saker</span>
+          </a>
+          <a href="/admin/messages" class="navbar-item <%= activePage === 'messages' ? 'active' : '' %>">
+            <i class="fas fa-comments"></i>
+            <span>Meldinger</span>
           </a>
           <a href="/admin/statistics" class="navbar-item <%= activePage === 'statistics' ? 'active' : '' %>">
             <i class="fas fa-chart-bar"></i>
-            <span>Statistics</span>
+            <span>Statistikk</span>
           </a>
           <% if (user.role === 'head_admin') { %>
             <a href="#" class="navbar-item" data-panel="notifications-panel">
@@ -87,16 +95,20 @@
               <span>Users</span>
             </a>
           <% } %>
-          <a href="#" class="navbar-item" data-panel="settings-panel">
+          <a href="/admin/staff" class="navbar-item <%= activePage === 'staff' ? 'active' : '' %>">
+            <i class="fas fa-user-shield"></i>
+            <span>Support-ansatte</span>
+          </a>
+          <a href="/admin/settings" class="navbar-item <%= activePage === 'settings' ? 'active' : '' %>">
             <i class="fas fa-cog"></i>
-            <span>Settings</span>
+            <span>Innstillinger</span>
           </a>
         <% } %>
         
         <!-- Common navigation items -->
         <a href="/auth/logout" class="navbar-item">
           <i class="fas fa-sign-out-alt"></i>
-          <span>Logout</span>
+          <span>Logg ut</span>
         </a>
       </div>
     </nav>

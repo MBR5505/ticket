@@ -49,46 +49,45 @@
     <!-- Left Panel (User Dashboard) -->
     <div class="panel left-panel">
       <div class="panel-header">
-        <h2>Dashboard</h2>
+        <h2>Velkommen, <%= user.name %></h2>
         <div class="panel-actions">
-          <button class="btn btn-primary open-panel" data-panel="new-ticket-panel">
-            <i class="fas fa-plus"></i> New Ticket
+          <button class="btn btn-primary" id="create-ticket-btn">
+            <i class="fas fa-plus"></i> Opprett ny sak
           </button>
         </div>
       </div>
+      
       <div class="panel-content">
-        <div class="welcome-card">
-          <div class="welcome-header">
-            <div class="welcome-icon">
-              <i class="fas fa-smile"></i>
+        <div class="dashboard-cards">
+          <div class="dashboard-card">
+            <div class="card-icon">
+              <i class="fas fa-ticket-alt"></i>
             </div>
-            <div class="welcome-message">
-              <h3>Welcome, <%= user.name %>!</h3>
-              <p>What can we help you with today?</p>
+            <div class="card-info">
+              <h3>Mine saker</h3>
+              <p class="card-value"><%= ticketStats.total %></p>
+              <div class="card-progress">
+                <div class="progress-bar">
+                  <div class="progress" style="width: <%= ticketStats.resolvedPercentage %>%"></div>
+                </div>
+                <span class="progress-text"><%= ticketStats.resolved %> løst</span>
+              </div>
             </div>
-          </div>
-          <div class="quick-actions">
-            <a href="#" class="quick-action-btn" data-panel="new-ticket-panel">
-              <i class="fas fa-ticket-alt"></i> Create Ticket
-            </a>
-            <a href="/user/messages" class="quick-action-btn">
-              <i class="fas fa-comments"></i> Chat Support
-            </a>
-            <a href="/user/tickets" class="quick-action-btn">
-              <i class="fas fa-list"></i> View Tickets
-            </a>
-          </div>
-        </div>
-        
-        <div class="dashboard-section">
-          <div class="section-header">
-            <h3>Recent Tickets</h3>
-            <a href="/user/tickets" class="section-link">View All</a>
           </div>
           
-          <% if (tickets && tickets.length > 0) { %>
+          <!-- Other cards... -->
+        </div>
+        
+        <!-- Recent tickets section -->
+        <div class="recent-tickets">
+          <div class="section-header">
+            <h3>Nylige saker</h3>
+            <a href="/user/tickets" class="view-all">Vis alle</a>
+          </div>
+          
+          <% if (recentTickets && recentTickets.length > 0) { %>
             <div class="tickets-list">
-              <% tickets.slice(0, 5).forEach(ticket => { %>
+              <% recentTickets.slice(0, 5).forEach(ticket => { %>
                 <div class="ticket-card" onclick="window.location.href='/tickets/user/<%= ticket._id %>'">
                   <div class="ticket-header">
                     <h4 class="ticket-title"><%= ticket.title %></h4>
@@ -114,60 +113,8 @@
               <div class="empty-icon">
                 <i class="fas fa-ticket-alt"></i>
               </div>
-              <h3>No Tickets Yet</h3>
-              <p>You haven't submitted any support tickets yet.</p>
-              <button class="btn btn-primary open-panel" data-panel="new-ticket-panel">
-                <i class="fas fa-plus"></i> Create Your First Ticket
-              </button>
-            </div>
-          <% } %>
-        </div>
-        
-        <div class="dashboard-section">
-          <div class="section-header">
-            <h3>Recent Messages</h3>
-            <a href="/user/messages" class="section-link">View All</a>
-          </div>
-          
-          <% if (messages && messages.length > 0) { %>
-            <div class="messages-list">
-              <% messages.slice(0, 3).forEach(message => { %>
-                <div class="message-preview" onclick="window.location.href='/user/messages'">
-                  <div class="message-avatar">
-                    <% if (message.sender._id.toString() !== user._id.toString() && 
-                          (message.sender.role === 'admin' || message.sender.role === 'head_admin')) { %>
-                      <i class="fas fa-headset"></i>
-                    <% } else { %>
-                      <%= message.sender.name.charAt(0).toUpperCase() %>
-                    <% } %>
-                  </div>
-                  <div class="message-content">
-                    <div class="message-header">
-                      <span class="message-sender">
-                        <%= message.sender._id.toString() === user._id.toString() ? 'You' : message.sender.name %>
-                        <% if (message.sender.role === 'admin' || message.sender.role === 'head_admin') { %>
-                          <span class="badge admin-badge">Admin</span>
-                        <% } %>
-                      </span>
-                      <span class="message-time"><%= formatTimeAgo(message.createdAt) %></span>
-                    </div>
-                    <div class="message-text">
-                      <%= message.content.length > 70 ? message.content.substring(0, 70) + '...' : message.content %>
-                    </div>
-                  </div>
-                </div>
-              <% }); %>
-            </div>
-          <% } else { %>
-            <div class="empty-state">
-              <div class="empty-icon">
-                <i class="fas fa-comments"></i>
-              </div>
-              <h3>No Messages Yet</h3>
-              <p>You haven't started any conversations with our support team.</p>
-              <a href="/user/messages" class="btn btn-primary">
-                <i class="fas fa-comment"></i> Start a Conversation
-              </a>
+              <h3>Ingen saker ennå</h3>
+              <p>Du har ikke opprettet noen saker ennå. Klikk på "Opprett ny sak" for å komme i gang.</p>
             </div>
           <% } %>
         </div>
@@ -182,7 +129,7 @@
     <!-- Right Panel (Ticket Stats) -->
     <div class="panel right-panel">
       <div class="panel-header">
-        <h2>Your Support Status</h2>
+        <h2>Aktivitetsoversikt</h2>
       </div>
       <div class="panel-content">
         <div class="ticket-stats">
@@ -286,56 +233,62 @@
   <!-- Third Panel (for new ticket) -->
   <div class="third-panel">
     <div class="third-panel-header">
-      <h3 class="panel-title">Create New Ticket</h3>
+      <h3 class="panel-title">Opprett ny sak</h3>
       <div class="close-panel">
         <i class="fas fa-times"></i>
       </div>
     </div>
     <div class="third-panel-content">
-      <div id="new-ticket-panel">
-        <form action="/tickets/create" method="POST" class="ticket-form" enctype="multipart/form-data">
-          <div class="form-group">
-            <label for="title">Title</label>
-            <input type="text" id="title" name="title" placeholder="Brief summary of your issue" required>
-          </div>
-          <div class="form-group">
-            <label for="category">Category</label>
-            <select id="category" name="category" required>
-              <option value="">Select a category</option>
-              <option value="technical">Technical Issue</option>
-              <option value="account">Account Problem</option>
-              <option value="billing">Billing Question</option>
-              <option value="feature">Feature Request</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="priority">Priority</label>
-            <select id="priority" name="priority">
-              <option value="low">Low</option>
-              <option value="medium" selected>Medium</option>
-              <option value="high">High</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="description">Description</label>
-            <textarea id="description" name="description" rows="8" placeholder="Please provide details about your issue..." required></textarea>
-          </div>
-          <div class="form-group">
-            <label for="ticket-attachments">Attachments (Optional)</label>
-            <div class="file-upload-container">
-              <div class="file-upload-button">
-                <i class="fas fa-paperclip"></i>
-                <span>Choose files</span>
-                <input type="file" id="ticket-attachments" name="attachments" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv">
-              </div>
-              <div class="file-upload-limit">Max 5 files, 5MB each</div>
+      <form id="new-ticket-form" action="/tickets/create" method="POST" enctype="multipart/form-data">
+        <div class="form-group">
+          <label for="ticket-title">Tittel</label>
+          <input type="text" id="ticket-title" name="title" required placeholder="Skriv en kort og beskrivende tittel">
+        </div>
+        
+        <div class="form-group">
+          <label for="ticket-category">Kategori</label>
+          <select id="ticket-category" name="category" required>
+            <option value="" disabled selected>Velg en kategori</option>
+            <option value="technical">Teknisk problem</option>
+            <option value="account">Kontoproblem</option>
+            <option value="billing">Fakturering</option>
+            <option value="feature">Funksjonsforespørsel</option>
+            <option value="other">Annet</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="ticket-priority">Prioritet</label>
+          <select id="ticket-priority" name="priority">
+            <option value="low">Lav</option>
+            <option value="medium" selected>Middels</option>
+            <option value="high">Høy</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="ticket-description">Beskrivelse</label>
+          <textarea id="ticket-description" name="description" rows="6" required placeholder="Beskriv problemet ditt i detalj..."></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label for="ticket-attachments">Vedlegg (valgfritt)</label>
+          <div class="file-input-wrapper">
+            <input type="file" id="ticket-attachments" name="attachments" multiple>
+            <div class="file-input-text">
+              <i class="fas fa-paperclip"></i>
+              <span>Dra filer hit eller klikk for å velge</span>
             </div>
-            <div id="attachments-preview" class="attachments-preview-container"></div>
           </div>
-          <button type="submit" class="btn btn-primary btn-block">Submit Ticket</button>
-        </form>
-      </div>
+          <div class="attachments-preview" id="attachments-preview"></div>
+          <p class="input-hint">Maksimalt 5 filer (bilder, dokumenter, PDF)</p>
+        </div>
+        
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Send inn</button>
+          <button type="button" class="btn btn-secondary close-panel-btn">Avbryt</button>
+        </div>
+      </form>
     </div>
   </div>
 </div>
