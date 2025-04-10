@@ -1,0 +1,285 @@
+<%- include('./partials/header.ejs') %>
+<div class="faq-container">
+    <h1 class="faq-header">Frequently Asked Questions</h1>
+    
+    <div class="search-container">
+        <input type="text" id="faqSearch" placeholder="Search for questions or keywords..." class="faq-search-input">
+    </div>
+    
+    <div class="faq-sections">
+        <!-- General Issues Section -->
+        <div class="faq-section" id="general-issues">
+            <h2 class="section-title">General Issues</h2>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <h3>How do I reset my password?</h3>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>To reset your password, click on the 'Forgot Password' link on the login page. You will receive an email with instructions to create a new password. Follow the link in that email and enter your new password. If you don't receive the email, check your spam folder or contact support.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <h3>The system is running slow, what can I do?</h3>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>If the system is running slow, try clearing your browser cache and cookies. Restart your browser and try again. If the issue persists, check your internet connection or try using a different browser. You can also try restarting your computer.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <h3>How do I update my profile information?</h3>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>To update your profile information, log in to your account and navigate to the profile section. Click on the 'Edit Profile' button and update the necessary information. Save the changes when you're done. If certain fields are not editable, contact your system administrator.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Ticket System Section -->
+        <div class="faq-section" id="ticket-system">
+            <h2 class="section-title">Ticket System</h2>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <h3>How do I create a new ticket?</h3>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>To create a new ticket, log in to your account and click on the 'Create New Ticket' button from your dashboard. Fill in all required information including the issue description, category, and priority level. Attach any relevant screenshots if needed and submit the form.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <h3>How do I check the status of my ticket?</h3>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>To check the status of your ticket, log in to your account and go to the 'My Tickets' section. You will see a list of all your tickets with their current status. You can also click on any ticket to view more details and any updates or responses from support staff.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <h3>Can I update or add information to an existing ticket?</h3>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>Yes, you can update an existing ticket. Go to the 'My Tickets' section, find the ticket you want to update, and click on it. In the ticket details page, you'll find a reply section where you can add additional comments or upload more attachments to provide further information.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <h3>How are ticket priorities determined?</h3>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>Ticket priorities are determined based on the impact and urgency of the issue. High priority is for critical issues affecting multiple users or business operations. Medium priority is for issues affecting a small group of users. Low priority is for minor issues or feature requests that don't affect core functionality.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Technical Problems Section -->
+        <div class="faq-section" id="technical-problems">
+            <h2 class="section-title">Technical Problems</h2>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <h3>I can't log in to the system. What should I do?</h3>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>If you can't log in, first ensure that you're using the correct username and password. Check if Caps Lock is turned on. Try resetting your password using the 'Forgot Password' feature. If you still can't log in, clear your browser cache and cookies, or try using a different browser. If the problem persists, contact support.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <h3>The application crashes frequently. How can I fix this?</h3>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>If the application crashes frequently, make sure your browser is updated to the latest version. Clear your browser cache and cookies. Disable browser extensions that might be interfering with the application. Try using a different browser. If the issue continues, report it to support with details about when the crashes occur.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <h3>Why can't I see certain features that others can access?</h3>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>Access to features is determined by your user role and permissions. If you can't see certain features, it might be because you don't have the required permissions. Contact your system administrator to request additional access if you need it for your work.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <h3>How do I troubleshoot connectivity issues?</h3>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>To troubleshoot connectivity issues, check if other websites or applications are working properly to determine if it's a general internet problem. Restart your router and modem. Check your network settings. Try connecting from a different network if possible. If the issue persists, contact your IT department or internet service provider.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add CSS for FAQ page -->
+<style>
+    .faq-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem;
+        font-family: 'Arial', sans-serif;
+    }
+    
+    .faq-header {
+        color: #2c3e50;
+        text-align: center;
+        margin-bottom: 2rem;
+        border-bottom: 2px solid #3498db;
+        padding-bottom: 1rem;
+    }
+    
+    .search-container {
+        margin-bottom: 2rem;
+    }
+    
+    .faq-search-input {
+        width: 100%;
+        padding: 0.8rem;
+        font-size: 1rem;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
+    
+    .faq-search-input:focus {
+        outline: none;
+        border-color: #3498db;
+        box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+    }
+    
+    .faq-section {
+        margin-bottom: 2rem;
+    }
+    
+    .section-title {
+        color: #3498db;
+        margin-bottom: 1rem;
+    }
+    
+    .faq-item {
+        margin-bottom: 1rem;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    
+    .faq-question {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background-color: #ffffff;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+    
+    .faq-question:hover {
+        background-color: #f5f9ff;
+    }
+    
+    .faq-question h3 {
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+    
+    .faq-answer {
+        padding: 0 1rem;
+        max-height: 0;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        opacity: 0;
+        line-height: 1.6;
+    }
+    
+    .faq-item.active .faq-question {
+        background-color: #f5f9ff;
+    }
+    
+    .faq-item.active .faq-answer {
+        padding: 1rem;
+        max-height: 500px;
+        opacity: 1;
+        border-top: 1px solid #e0e0e0;
+    }
+    
+    .faq-item.active .fa-chevron-down {
+        transform: rotate(180deg);
+    }
+    
+    .fa-chevron-down {
+        transition: transform 0.3s ease;
+    }
+</style>
+
+<!-- Add JavaScript for FAQ functionality -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Toggle FAQ answers
+        const faqQuestions = document.querySelectorAll('.faq-question');
+        faqQuestions.forEach(question => {
+            question.addEventListener('click', () => {
+                const faqItem = question.parentElement;
+                faqItem.classList.toggle('active');
+            });
+        });
+        
+        // Search functionality
+        const searchInput = document.getElementById('faqSearch');
+        const faqItems = document.querySelectorAll('.faq-item');
+        
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            
+            faqItems.forEach(item => {
+                const question = item.querySelector('.faq-question h3').textContent.toLowerCase();
+                const answer = item.querySelector('.faq-answer p').textContent.toLowerCase();
+                
+                if (question.includes(searchTerm) || answer.includes(searchTerm)) {
+                    item.style.display = 'block';
+                    // Find the parent section of this item
+                    const section = item.closest('.faq-section');
+                    if (section) {
+                        section.style.display = 'block';
+                    }
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            
+            // Hide sections with no visible items
+            document.querySelectorAll('.faq-section').forEach(section => {
+                const visibleItems = section.querySelectorAll('.faq-item[style="display: block;"]');
+                if (visibleItems.length === 0) {
+                    section.style.display = 'none';
+                }
+            });
+        });
+    });
+</script>
+
+<%- include('./partials/footer.ejs') %>

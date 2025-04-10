@@ -23,6 +23,14 @@ router.get('/messages', authorize('user'), (req, res) => {
   });
 });
 
+router.get('/faq', authorize('user'), (req, res) => {
+  res.render('faq.ejs', {
+    title: 'Frequently Asked Questions',
+    user: req.user,
+    activePage: 'faq'
+  });
+});
+
 // User settings page
 router.get('/settings', authorize('user', 'admin_requester'), dashboardController.getUserSettings);
 

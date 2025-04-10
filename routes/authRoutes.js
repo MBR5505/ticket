@@ -28,6 +28,7 @@ router.post('/login', [
   check('password', 'Password is required').exists()
 ], authController.login);
 
+
 // Register routes
 router.get('/register', redirectIfAuthenticated, authController.getRegisterPage);
 router.post('/register', [
