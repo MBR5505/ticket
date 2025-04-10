@@ -6,6 +6,7 @@
   <title><%= title %> - Helpdesk Billettsystem</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/faq.css">
   <link rel="stylesheet" href="/css/notifications.css">
   <% if (typeof user !== 'undefined' && (user.role === 'admin' || user.role === 'head_admin')) { %>
     <link rel="stylesheet" href="/css/admin-status.css">
@@ -31,49 +32,67 @@
       <% }); %>
     </div>
   <% } %>
-
-  <%- body %>
+tion -->
+  <%- body %><nav class="main-nav">
   
   <script src="/js/notifications.js"></script>
   <% if (typeof user !== 'undefined' && (user.role === 'admin' || user.role === 'head_admin')) { %>
-    <script src="/js/adminStatus.js"></script>
+    <script src="/js/adminStatus.js"></script> <i class="fas fa-headset"></i>
   <% } %>
-  <%- typeof script !== 'undefined' ? script : '' %>
-  
+  <%- typeof script !== 'undefined' ? script : '' %>      </a>
+  v>
   <script>
-    // Convert flash messages to notifications
-    document.addEventListener('DOMContentLoaded', function() {
-      if (window.notifications) {
+    // Convert flash messages to notificationstive' : '' %>">Hjem</a></li>
+    document.addEventListener('DOMContentLoaded', function() {"<%= activePage === 'faq' ? 'active' : '' %>">FAQ</a></li>
+      if (window.notifications) {t</a></li>
         const successMessages = document.querySelectorAll('.flash-message.success .message');
-        const errorMessages = document.querySelectorAll('.flash-message.error .message');
+        const errorMessages = document.querySelectorAll('.flash-message.error .message');v>
         
         successMessages.forEach(msg => {
-          window.notifications.success(msg.textContent);
+          window.notifications.success(msg.textContent);%>
         });
+        /script>
+  <% if (typeof user !== 'undefined' && (user.role === 'admin' || user.role === 'head_admin')) { %>
+    <script src="/js/adminStatus.js"></script>indow.notifications.error(msg.textContent);
+  <% } %>});
+  <%- typeof script !== 'undefined' ? script : '' %>
+  
+  <script>flash-message').forEach(el => {
+    // Convert flash messages to notificationsl.style.display = 'none';
+    document.addEventListener('DOMContentLoaded', function() { });
+      if (window.notifications) {
+        const successMessages = document.querySelectorAll('.flash-message.success .message');    });
+        const errorMessages = document.querySelectorAll('.flash-message.error .message');
+        ion after a delay
+        successMessages.forEach(msg => {
+          window.notifications.success(msg.textContent);cket.connected)) {
+        });tion failed or not established');
         
         errorMessages.forEach(msg => {
-          window.notifications.error(msg.textContent);
-        });
-        
-        // Remove flash messages from DOM after conversion
+          window.notifications.error(msg.textContent);oner kan være utilgjengelige. Vennligst prøv å logge ut og inn igjen.',
+        });'Tilkoblingsproblem'
+         );
+        // Remove flash messages from DOM after conversion }
         document.querySelectorAll('.flash-message').forEach(el => {
-          el.style.display = 'none';
-        });
+          el.style.display = 'none';); // Check after 3 seconds
+        });ipt>
       }
-    });
+    });</html>
 
-    // Check socket connection after a delay
-    setTimeout(function() {
-      if (typeof io !== 'undefined' && (!window.socket || !window.socket.connected)) {
-        console.warn('Socket connection failed or not established');
-        if (window.notifications) {
-          window.notifications.warning(
-            'Noen sanntidsfunksjoner kan være utilgjengelige. Vennligst prøv å logge ut og inn igjen.',
-            'Tilkoblingsproblem'
-          );
-        }
-      }
-    }, 3000); // Check after 3 seconds
-  </script>
-</body>
-</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</html></body>  </script>    }, 3000); // Check after 3 seconds      }        }          );            'Tilkoblingsproblem'            'Noen sanntidsfunksjoner kan være utilgjengelige. Vennligst prøv å logge ut og inn igjen.',          window.notifications.warning(        if (window.notifications) {        console.warn('Socket connection failed or not established');      if (typeof io !== 'undefined' && (!window.socket || !window.socket.connected)) {    setTimeout(function() {    // Check socket connection after a delay

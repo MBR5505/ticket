@@ -3,121 +3,465 @@ const Ticket = require('../models/Ticket');
 const Message = require('../models/Message');
 const argon2 = require('argon2'); // Replaced bcrypt with argon2
 
-// User dashboard
+/**
+ * @desc    Get user dashboard
+ * @route   GET /user/dashboard
+ * @access  Private
+ */
 exports.getUserDashboard = async (req, res) => {
   try {
     // Get user's tickets
-    const tickets = await Ticket.find({ user: req.user._id })
-      .sort({ createdAt: -1 });
-    
-    // Get active chats (this is a simplified version)
-    const messages = await Message.find({
-      $or: [
-        { sender: req.user._id },
-        { recipient: req.user._id }
-      ],
-      ticket: null // Only get direct messages, not ticket messages
-    })
+    const tickets = await Ticket.find({ user: req.user.id })
       .sort({ createdAt: -1 })
-      .limit(20);
+      .populate('assignedTo', 'name');
+    
+    // Get user's recent messages
+    const messages = await Message.find({
+      $or: [{ sender: req.user.id }, { recipient: req.user.id }]
+    })
+    .sort({ createdAt: -1 })
+    .limit(5)
+    .populate('sender', 'name role')
+    .populate('recipient', 'name role');
     
     res.render('user/dashboard', {
-      title: 'Dashboard',
-      user: req.user,
-      tickets,
-      messages,
+      title: 'Bruker Dashboard',
       activePage: 'dashboard',
-      formatTimeAgo
+      tickets,
+      messages
     });
   } catch (error) {
-    console.error('Dashboard error:', error);
-    res.status(500).render('error', { error: 'Failed to load dashboard' });
+    console.error('Error loading user dashboard:', error);
+    res.status(500).render('error', {
+      message: 'Kunne ikke laste dashboard',
+      error,
+      status: 500
+    });
   }
 };
 
-// Admin dashboard
+/**
+ * @desc    Get user tickets
+ * @route   GET /user/tickets
+ * @access  Private
+ */
+exports.getUserTickets = async (req, res) => {
+  try {
+    // Get user's tickets
+    const tickets = await Ticket.find({ user: req.user.id })
+      .sort({ updatedAt: -1 })
+      .populate('assignedTo', 'name')
+      .populate('user', 'name');
+    
+    res.render('user/tickets', {
+      title: 'Mine Saker',
+      activePage: 'tickets',
+      tickets
+    });
+  } catch (error) {
+    console.error('Error loading user tickets:', error);
+    res.status(500).render('error', {
+      message: 'Kunne ikke laste saker',
+      error,
+      status: 500
+    });
+  }
+};
+
+/**
+ * @desc    Get user settings page
+ * @route   GET /user/settings
+ * @access  Private
+ */
+exports.getUserSettings = async (req, res) => {
+  try {
+    // Get fresh user data
+    const user = await User.findById(req.user.id);
+    
+    res.render('user/settings', {
+      title: 'Innstillinger',
+      activePage: 'settings',
+      user
+    });
+  } catch (error) {
+    console.error('Error loading user settings:', error);
+    res.status(500).render('error', {
+      message: 'Kunne ikke laste innstillinger',
+      error,
+      status: 500
+    });
+  }
+};
+
+/**
+ * @desc    Get admin dashboard
+ * @route   GET /admin/dashboard
+ * @access  Private/Admin
+ */
 exports.getAdminDashboard = async (req, res) => {
   try {
-    // Get tickets assigned to this admin
-    const myTickets = await Ticket.find({ assignedTo: req.user._id })
-      .populate('user', 'name email')
-      .sort({ updatedAt: -1 });
-    
-    // Get open tickets
-    const openTickets = await Ticket.find({ status: 'open', assignedTo: null })
-      .populate('user', 'name email')
-      .sort({ createdAt: -1 })
-      .limit(10);
-    
-    // Get recent tickets
-    const recentTickets = await Ticket.find()
-      .populate('user', 'name email')
+    // Get assigned tickets
+    const myTickets = await Ticket.find({ assignedTo: req.user.id })
       .sort({ updatedAt: -1 })
-      .limit(10);
+      .populate('user', 'name');
     
-    // Get active chats (simplified version)
-    const chats = await Message.aggregate([
-      {
-        $match: {
-          ticket: null,
-          $or: [
-            { recipient: req.user._id },
-            { recipient: null } // Messages sent to all admins
-          ]
-        }
-      },
-      {
-        $sort: { createdAt: -1 }
-      },
-      {
-        $group: {
-          _id: '$sender',
-          lastMessage: { $first: '$content' },
-          updatedAt: { $first: '$createdAt' },
-          unreadCount: {
-            $sum: {
-              $cond: [
-                { $eq: ['$isRead', false] },
-                1,
-                0
-              ]
-            }
-          }
-        }
-      },
-      {
-        $sort: { updatedAt: -1 }
-      },
-      {
-        $limit: 10
-      }
-    ]);
+    // Get all open tickets
+    const openTickets = await Ticket.find({ status: 'open', assignedTo: null })
+      .sort({ createdAt: -1 })
+      .populate('user', 'name');
     
-    // Populate chat user details
-    for (const chat of chats) {
-      chat.user = await User.findById(chat._id).select('name email role');
-      // Mark chat as active if there are unread messages
-      chat.active = chat.unreadCount > 0;
-    }
+    // Get active chats (stub - replace with actual chat data when implemented)
+    const chats = [];
     
     res.render('admin/dashboard', {
       title: 'Admin Dashboard',
-      user: req.user,
+      activePage: 'dashboard',
       myTickets,
       openTickets,
-      recentTickets,
-      chats,
-      activePage: 'dashboard',
-      formatTime: (date) => {
-        return new Date(date).toLocaleTimeString([], { 
-          hour: '2-digit', 
-          minute: '2-digit' 
-        });
+      chats
+    });
+  } catch (error) {
+    console.error('Error loading admin dashboard:', error);
+    res.status(500).render('error', {
+      message: 'Kunne ikke laste admin dashboard',
+      error,
+      status: 500
+    });
+  }
+};
+
+/**
+ * @desc    Get admin tickets page
+ * @route   GET /admin/tickets
+ * @access  Private/Admin
+ */
+exports.getAdminTickets = async (req, res) => {
+  try {
+    // Pagination
+    const page = parseInt(req.query.page) || 1;
+    const limit = 20;
+    const skip = (page - 1) * limit;
+    
+    // Apply filters if present
+    let filter = {};
+    if (req.query.status && req.query.status !== 'all') {
+      filter.status = req.query.status;
+    }
+    
+    // Count total tickets for pagination
+    const total = await Ticket.countDocuments(filter);
+    
+    // Get tickets
+    const tickets = await Ticket.find(filter)
+      .sort({ updatedAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate('user', 'name')
+      .populate('assignedTo', 'name');
+    
+    // Get all admins for assignment
+    const admins = await User.find({ 
+      role: { $in: ['admin', 'head_admin'] } 
+    }).select('name email status');
+    
+    res.render('admin/tickets', {
+      title: 'Alle saker',
+      activePage: 'tickets',
+      tickets,
+      admins,
+      currentPage: page,
+      totalPages: Math.ceil(total / limit)
+    });
+  } catch (error) {
+    console.error('Error loading admin tickets:', error);
+    res.status(500).render('error', {
+      message: 'Kunne ikke laste saker',
+      error,
+      status: 500
+    });
+  }
+};
+
+/**
+ * @desc    Get assigned tickets page
+ * @route   GET /admin/tickets/assigned
+ * @access  Private/Admin
+ */
+exports.getAssignedTickets = async (req, res) => {
+  try {
+    const tickets = await Ticket.find({ assignedTo: req.user.id })
+      .sort({ updatedAt: -1 })
+      .populate('user', 'name');
+    
+    res.render('admin/assigned-tickets', {
+      title: 'Mine tildelte saker',
+      activePage: 'tickets',
+      tickets
+    });
+  } catch (error) {
+    console.error('Error loading assigned tickets:', error);
+    res.status(500).render('error', {
+      message: 'Kunne ikke laste tildelte saker',
+      error,
+      status: 500
+    });
+  }
+};
+
+/**
+ * @desc    Get admin messages page
+ * @route   GET /admin/messages
+ * @access  Private/Admin
+ */
+exports.getAdminMessages = async (req, res) => {
+  try {
+    res.render('admin/messages', {
+      title: 'Meldinger',
+      activePage: 'messages'
+    });
+  } catch (error) {
+    console.error('Error loading admin messages:', error);
+    res.status(500).render('error', {
+      message: 'Kunne ikke laste meldinger',
+      error,
+      status: 500
+    });
+  }
+};
+
+/**
+ * @desc    Get admin statistics page
+ * @route   GET /admin/statistics
+ * @access  Private/Admin
+ */
+exports.getAdminStatistics = async (req, res) => {
+  try {
+    // Get counts for different ticket statuses
+    const openCount = await Ticket.countDocuments({ status: 'open' });
+    const inProgressCount = await Ticket.countDocuments({ status: 'in_progress' });
+    const resolvedCount = await Ticket.countDocuments({ status: 'resolved' });
+    
+    // Get counts for different priorities
+    const highPriorityCount = await Ticket.countDocuments({ priority: 'high' });
+    const mediumPriorityCount = await Ticket.countDocuments({ priority: 'medium' });
+    const lowPriorityCount = await Ticket.countDocuments({ priority: 'low' });
+    
+    // Get counts for different categories
+    const technicalCount = await Ticket.countDocuments({ category: 'technical' });
+    const accountCount = await Ticket.countDocuments({ category: 'account' });
+    const billingCount = await Ticket.countDocuments({ category: 'billing' });
+    const featureCount = await Ticket.countDocuments({ category: 'feature' });
+    const otherCount = await Ticket.countDocuments({ category: 'other' });
+    
+    res.render('admin/statistics', {
+      title: 'Statistikk',
+      activePage: 'statistics',
+      stats: {
+        status: {
+          open: openCount,
+          in_progress: inProgressCount,
+          resolved: resolvedCount
+        },
+        priority: {
+          high: highPriorityCount,
+          medium: mediumPriorityCount,
+          low: lowPriorityCount
+        },
+        category: {
+          technical: technicalCount,
+          account: accountCount,
+          billing: billingCount,
+          feature: featureCount,
+          other: otherCount
+        }
       }
     });
   } catch (error) {
-    console.error('Admin dashboard error:', error);
-    res.status(500).render('error', { error: 'Failed to load dashboard' });
+    console.error('Error loading statistics:', error);
+    res.status(500).render('error', {
+      message: 'Kunne ikke laste statistikk',
+      error,
+      status: 500
+    });
+  }
+};
+
+/**
+ * @desc    Get admin users management page
+ * @route   GET /admin/users
+ * @access  Private/HeadAdmin
+ */
+exports.getAdminUsers = async (req, res) => {
+  try {
+    // Get all users
+    const users = await User.find({ role: 'user' }).sort({ name: 1 });
+    
+    // Get pending admin requests
+    const pendingAdmins = await User.find({ 
+      adminRequest: true,
+      role: 'user'
+    }).sort({ adminRequestDate: 1 });
+    
+    res.render('admin/users', {
+      title: 'Brukeradministrasjon',
+      activePage: 'users',
+      users,
+      pendingAdmins
+    });
+  } catch (error) {
+    console.error('Error loading users:', error);
+    res.status(500).render('error', {
+      message: 'Kunne ikke laste brukere',
+      error,
+      status: 500
+    });
+  }
+};
+
+/**
+ * @desc    Get admin staff management page
+ * @route   GET /admin/staff
+ * @access  Private/Admin
+ */
+exports.getAdminStaff = async (req, res) => {
+  try {
+    // Get all admin users
+    const admins = await User.find({ 
+      role: { $in: ['admin', 'head_admin'] } 
+    }).sort({ name: 1 });
+    
+    res.render('admin/staff', {
+      title: 'Support-ansatte',
+      activePage: 'staff',
+      admins
+    });
+  } catch (error) {
+    console.error('Error loading staff:', error);
+    res.status(500).render('error', {
+      message: 'Kunne ikke laste ansatte',
+      error,
+      status: 500
+    });
+  }
+};
+
+/**
+ * @desc    Get admin settings page
+ * @route   GET /admin/settings
+ * @access  Private/Admin
+ */
+exports.getAdminSettings = async (req, res) => {
+  try {
+    // Get fresh user data
+    const user = await User.findById(req.user.id);
+    
+    res.render('admin/settings', {
+      title: 'Innstillinger',
+      activePage: 'settings',
+      user
+    });
+  } catch (error) {
+    console.error('Error loading admin settings:', error);
+    res.status(500).render('error', {
+      message: 'Kunne ikke laste innstillinger',
+      error,
+      status: 500
+    });
+  }
+};
+
+/**
+ * @desc    Update user settings
+ * @route   POST /user/settings/update
+ * @access  Private
+ */
+exports.updateUserSettings = async (req, res) => {
+  try {
+    const { name, email, theme, notifications } = req.body;
+    
+    // Update user
+    await User.findByIdAndUpdate(req.user.id, {
+      name,
+      email,
+      'preferences.theme': theme,
+      'preferences.notifications': notifications
+    });
+    
+    res.status(200).json({ success: true });
+  } catch (error) {
+    console.error('Error updating user settings:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Kunne ikke oppdatere innstillinger' 
+    });
+  }
+};
+
+/**
+ * @desc    Update user password
+ * @route   POST /user/settings/password
+ * @access  Private
+ */
+exports.updateUserPassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    
+    // Get user with password
+    const user = await User.findById(req.user.id).select('+password');
+    
+    // Check current password
+    const isMatch = await user.matchPassword(currentPassword);
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: 'Nåværende passord er ikke korrekt'
+      });
+    }
+    
+    // Update password
+    user.password = newPassword;
+    await user.save();
+    
+    res.status(200).json({ success: true });
+  } catch (error) {
+    console.error('Error updating password:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Kunne ikke oppdatere passord'
+    });
+  }
+};
+
+/**
+ * @desc    Update admin settings
+ * @route   POST /admin/settings/update
+ * @access  Private/Admin
+ */
+exports.updateAdminSettings = async (req, res) => {
+  try {
+    const { status, theme, specializations, maxConcurrentChats } = req.body;
+    
+    // Build update object
+    const updateData = {};
+    if (status) updateData.status = status;
+    if (theme) updateData['preferences.theme'] = theme;
+    if (specializations) updateData.specializations = specializations;
+    if (maxConcurrentChats) updateData.maxConcurrentChats = maxConcurrentChats;
+    
+    // Update user
+    const user = await User.findByIdAndUpdate(
+      req.user.id, 
+      updateData, 
+      { new: true }
+    );
+    
+    res.status(200).json({ success: true, user });
+  } catch (error) {
+    console.error('Error updating admin settings:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Kunne ikke oppdatere innstillinger' 
+    });
   }
 };
 
@@ -137,58 +481,6 @@ exports.getWaitingPage = async (req, res) => {
   } catch (error) {
     console.error('Waiting page error:', error);
     res.status(500).render('error', { error: 'Failed to load waiting page' });
-  }
-};
-
-// User settings page
-exports.getUserSettings = async (req, res) => {
-  try {
-    res.render('user/settings', {
-      title: 'Settings',
-      user: req.user,
-      activePage: 'settings'
-    });
-  } catch (error) {
-    console.error('Settings page error:', error);
-    res.status(500).render('error', { error: 'Failed to load settings' });
-  }
-};
-
-// Update user settings
-exports.updateUserSettings = async (req, res) => {
-  try {
-    const { name, email, theme, chatPosition } = req.body;
-    
-    // Update user
-    const user = await User.findById(req.user._id);
-    
-    user.name = name;
-    user.email = email;
-    
-    // Update preferences
-    if (!user.preferences) {
-      user.preferences = {};
-    }
-    
-    if (theme) {
-      user.preferences.theme = theme;
-    }
-    
-    if (chatPosition) {
-      if (!user.preferences.layout) {
-        user.preferences.layout = {};
-      }
-      user.preferences.layout.chatPosition = chatPosition;
-    }
-    
-    await user.save();
-    
-    req.flash('success', 'Settings updated successfully');
-    res.redirect('/user/settings');
-  } catch (error) {
-    console.error('Update settings error:', error);
-    req.flash('error', 'Failed to update settings');
-    res.redirect('/user/settings');
   }
 };
 

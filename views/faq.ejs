@@ -1,0 +1,385 @@
+<%- contentFor('body') %>
+
+<div class="faq-container">
+  <div class="faq-header">
+    <h1>Vanlige spørsmål</h1>
+    <p>Finn svar på de vanligste spørsmålene om vår helpdesk-tjeneste</p>
+    
+    <div class="faq-search">
+      <input type="text" id="faq-search-input" placeholder="Søk i vanlige spørsmål...">
+      <button id="faq-search-btn"><i class="fas fa-search"></i></button>
+    </div>
+  </div>
+
+  <div class="faq-content">
+    <div class="faq-categories">
+      <button class="category-btn active" data-category="all">Alle spørsmål</button>
+      <button class="category-btn" data-category="account">Konto</button>
+      <button class="category-btn" data-category="technical">Teknisk</button>
+      <button class="category-btn" data-category="billing">Fakturering</button>
+      <button class="category-btn" data-category="general">Generelt</button>
+    </div>
+
+    <div class="faq-questions">
+      <!-- Account -->
+      <div class="faq-category" data-category="account">
+        <h2>Kontospørsmål</h2>
+        
+        <div class="faq-item">
+          <div class="faq-question">
+            <h3>Hvordan oppretter jeg en konto?</h3>
+            <div class="toggle-icon"><i class="fas fa-chevron-down"></i></div>
+          </div>
+          <div class="faq-answer">
+            <p>For å opprette en konto kan du klikke på "Registrer" knappen øverst til høyre på hovedsiden. Du vil bli bedt om å fylle ut nødvendig informasjon som navn, e-post og passord.</p>
+            <p>Etter registrering vil du motta en bekreftelses-e-post for å aktivere kontoen din.</p>
+          </div>
+        </div>
+        
+        <div class="faq-item">
+          <div class="faq-question">
+            <h3>Jeg har glemt passordet mitt. Hva gjør jeg?</h3>
+            <div class="toggle-icon"><i class="fas fa-chevron-down"></i></div>
+          </div>
+          <div class="faq-answer">
+            <p>På innloggingssiden finner du en lenke merket "Glemt passord". Klikk på denne lenken og følg instruksjonene for å tilbakestille passordet ditt.</p>
+            <p>Du vil motta en e-post med en lenke for å opprette et nytt passord. Av sikkerhetsgrunner er denne lenken kun gyldig i 30 minutter.</p>
+          </div>
+        </div>
+        
+        <div class="faq-item">
+          <div class="faq-question">
+            <h3>Hvordan endrer jeg kontoinformasjonen min?</h3>
+            <div class="toggle-icon"><i class="fas fa-chevron-down"></i></div>
+          </div>
+          <div class="faq-answer">
+            <p>Når du er logget inn, kan du gå til "Innstillinger" i hovedmenyen. Her kan du oppdatere din personlige informasjon, endre passord og håndtere varslingspreferanser.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Technical -->
+      <div class="faq-category" data-category="technical">
+        <h2>Tekniske spørsmål</h2>
+        
+        <div class="faq-item">
+          <div class="faq-question">
+            <h3>Systemet laster ikke inn riktig. Hva kan jeg gjøre?</h3>
+            <div class="toggle-icon"><i class="fas fa-chevron-down"></i></div>
+          </div>
+          <div class="faq-answer">
+            <p>Prøv følgende feilsøkingssteg:</p>
+            <ol>
+              <li>Oppdater siden (F5 eller Ctrl+R)</li>
+              <li>Tøm nettleserens buffer (Ctrl+Shift+Delete)</li>
+              <li>Prøv en annen nettleser</li>
+              <li>Sjekk internettforbindelsen din</li>
+            </ol>
+            <p>Hvis problemet vedvarer, vennligst <a href="/user/tickets/create">opprett en sak</a> med detaljer om problemet.</p>
+          </div>
+        </div>
+        
+        <div class="faq-item">
+          <div class="faq-question">
+            <h3>Hvordan laster jeg opp vedlegg?</h3>
+            <div class="toggle-icon"><i class="fas fa-chevron-down"></i></div>
+          </div>
+          <div class="faq-answer">
+            <p>Du kan laste opp vedlegg både når du oppretter en ny sak og når du sender svar på eksisterende saker.</p>
+            <p>Klikk på binders-ikonet i meldingsboksen for å velge filer fra datamaskinen din. Støttede filformater inkluderer bilder (JPG, PNG), dokumenter (PDF, DOC, DOCX), regneark (XLS, XLSX) og presentasjoner (PPT, PPTX).</p>
+            <p>Maksimal filstørrelse per vedlegg er 10 MB.</p>
+          </div>
+        </div>
+        
+        <div class="faq-item">
+          <div class="faq-question">
+            <h3>Hvilke nettlesere støttes?</h3>
+            <div class="toggle-icon"><i class="fas fa-chevron-down"></i></div>
+          </div>
+          <div class="faq-answer">
+            <p>Vår helpdesk støtter følgende nettlesere i deres nyeste versjoner:</p>
+            <ul>
+              <li>Google Chrome</li>
+              <li>Mozilla Firefox</li>
+              <li>Microsoft Edge</li>
+              <li>Safari</li>
+              <li>Opera</li>
+            </ul>
+            <p>Vi anbefaler å alltid holde nettleseren din oppdatert for best mulig ytelse og sikkerhet.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Billing -->
+      <div class="faq-category" data-category="billing">
+        <h2>Faktureringsspørsmål</h2>
+        
+        <div class="faq-item">
+          <div class="faq-question">
+            <h3>Hvilke betalingsmetoder aksepterer dere?</h3>
+            <div class="toggle-icon"><i class="fas fa-chevron-down"></i></div>
+          </div>
+          <div class="faq-answer">
+            <p>Vi aksepterer følgende betalingsmetoder:</p>
+            <ul>
+              <li>Kredittkort (Visa, MasterCard)</li>
+              <li>Debetkort</li>
+              <li>Faktura (for bedriftskunder)</li>
+              <li>Vipps</li>
+            </ul>
+          </div>
+        </div>
+        
+        <div class="faq-item">
+          <div class="faq-question">
+            <h3>Hvordan får jeg tilgang til fakturaene mine?</h3>
+            <div class="toggle-icon"><i class="fas fa-chevron-down"></i></div>
+          </div>
+          <div class="faq-answer">
+            <p>Du kan finne alle fakturaer under "Min konto" > "Fakturaer" etter innlogging. Herfra kan du:</p>
+            <ul>
+              <li>Se fakturahistorikk</li>
+              <li>Laste ned PDF-fakturaer</li>
+              <li>Betale utestående fakturaer</li>
+            </ul>
+            <p>Fakturaer sendes også til e-postadressen din ved utstedelse.</p>
+          </div>
+        </div>
+        
+        <div class="faq-item">
+          <div class="faq-question">
+            <h3>Hva er avbestillings- og refusjonspolicyen?</h3>
+            <div class="toggle-icon"><i class="fas fa-chevron-down"></i></div>
+          </div>
+          <div class="faq-answer">
+            <p>Våre avbestillingsregler er som følger:</p>
+            <ul>
+              <li>Abonnementer kan avbestilles når som helst, men vi gir ikke refusjon for delvis brukte perioder</li>
+              <li>Refusjon for årlige abonnementer kan gis innen 14 dager fra kjøpsdato</li>
+              <li>For å avbestille, gå til "Min konto" > "Abonnement"</li>
+            </ul>
+            <p>For spesifikke spørsmål om refusjoner, vennligst <a href="/contact">kontakt vår økonomiavdeling</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- General -->
+      <div class="faq-category" data-category="general">
+        <h2>Generelle spørsmål</h2>
+        
+        <div class="faq-item">
+          <div class="faq-question">
+            <h3>Hva er støttetidene deres?</h3>
+            <div class="toggle-icon"><i class="fas fa-chevron-down"></i></div>
+          </div>
+          <div class="faq-answer">
+            <p>Vår helpdesk er bemannet på følgende tidspunkter:</p>
+            <ul>
+              <li>Mandag til fredag: 08:00 - 16:00</li>
+              <li>Lørdager: 10:00 - 14:00</li>
+              <li>Søndager og helligdager: Stengt</li>
+            </ul>
+            <p>Saker kan opprettes 24/7, men vil kun behandles innenfor de angitte støttetidene.</p>
+          </div>
+        </div>
+        
+        <div class="faq-item">
+          <div class="faq-question">
+            <h3>Hva er responstiden på saker?</h3>
+            <div class="toggle-icon"><i class="fas fa-chevron-down"></i></div>
+          </div>
+          <div class="faq-answer">
+            <p>Vi streber etter å svare på alle henvendelser så raskt som mulig. Våre mål for responstid er:</p>
+            <ul>
+              <li>Høy prioritet: Innen 2 timer</li>
+              <li>Middels prioritet: Innen 8 timer</li>
+              <li>Lav prioritet: Innen 24 timer</li>
+            </ul>
+            <p>Disse tidene gjelder kun innenfor våre støttetider. Responstiden kan variere basert på saksmengde.</p>
+          </div>
+        </div>
+        
+        <div class="faq-item">
+          <div class="faq-question">
+            <h3>Hvordan prioriteres saker?</h3>
+            <div class="toggle-icon"><i class="fas fa-chevron-down"></i></div>
+          </div>
+          <div class="faq-answer">
+            <p>Saker prioriteres basert på følgende kriterier:</p>
+            <ul>
+              <li><strong>Høy prioritet:</strong> Kritiske problemer som påvirker flere brukere eller hindrer viktige arbeidsprosesser</li>
+              <li><strong>Middels prioritet:</strong> Problemer som påvirker enkelte brukere eller funksjoner, men har workarounds tilgjengelig</li>
+              <li><strong>Lav prioritet:</strong> Generelle spørsmål, mindre problemer eller forbedringsforslag</li>
+            </ul>
+            <p>Administratorer kan justere prioritet basert på sakens karakter og omfang.</p>
+          </div>
+        </div>
+        
+        <div class="faq-item">
+          <div class="faq-question">
+            <h3>Hvordan kan jeg gi tilbakemelding på support?</h3>
+            <div class="toggle-icon"><i class="fas fa-chevron-down"></i></div>
+          </div>
+          <div class="faq-answer">
+            <p>Vi setter stor pris på tilbakemeldinger for å forbedre tjenestene våre:</p>
+            <ul>
+              <li>Etter at en sak er løst, vil du motta en e-post med lenke til et tilbakemeldingsskjema</li>
+              <li>Du kan også gi tilbakemelding direkte i saksoversikten etter at en sak er løst</li>
+              <li>For generelle tilbakemeldinger om systemet, bruk <a href="/feedback">tilbakemeldingsskjemaet</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="faq-contact">
+    <div class="contact-message">
+      <h2>Fant du ikke svar på spørsmålet ditt?</h2>
+      <p>Vi er her for å hjelpe deg med alle spørsmål du måtte ha.</p>
+    </div>
+    <div class="contact-actions">
+      <a href="/user/tickets/create" class="btn btn-primary">
+        <i class="fas fa-ticket-alt"></i> Opprett en sak
+      </a>
+      <a href="/live-chat" class="btn btn-secondary">
+        <i class="fas fa-comments"></i> Start chat med support
+      </a>
+    </div>
+  </div>
+</div>
+
+<% contentFor('script') %>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Toggle FAQ answers
+    const questions = document.querySelectorAll('.faq-question');
+    questions.forEach(question => {
+      question.addEventListener('click', function() {
+        const answer = this.nextElementSibling;
+        const icon = this.querySelector('.toggle-icon i');
+        
+        // Toggle display
+        if (answer.style.maxHeight) {
+          answer.style.maxHeight = null;
+          icon.className = 'fas fa-chevron-down';
+        } else {
+          answer.style.maxHeight = answer.scrollHeight + 'px';
+          icon.className = 'fas fa-chevron-up';
+        }
+        
+        // Add active class
+        this.classList.toggle('active');
+      });
+    });
+    
+    // Filter by category
+    const categoryButtons = document.querySelectorAll('.category-btn');
+    categoryButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        // Remove active class from all buttons
+        categoryButtons.forEach(btn => btn.classList.remove('active'));
+        
+        // Add active class to clicked button
+        this.classList.add('active');
+        
+        const category = this.getAttribute('data-category');
+        
+        // Show all or filter by category
+        if (category === 'all') {
+          document.querySelectorAll('.faq-category').forEach(cat => {
+            cat.style.display = 'block';
+          });
+        } else {
+          document.querySelectorAll('.faq-category').forEach(cat => {
+            if (cat.getAttribute('data-category') === category) {
+              cat.style.display = 'block';
+            } else {
+              cat.style.display = 'none';
+            }
+          });
+        }
+        
+        // Reset search
+        document.getElementById('faq-search-input').value = '';
+        document.querySelectorAll('.faq-item').forEach(item => {
+          item.style.display = 'block';
+        });
+      });
+    });
+    
+    // Search functionality
+    const searchInput = document.getElementById('faq-search-input');
+    const searchButton = document.getElementById('faq-search-btn');
+    
+    function performSearch() {
+      const searchTerm = searchInput.value.toLowerCase();
+      
+      if (searchTerm.length < 2) {
+        // If search term is too short, show all
+        document.querySelectorAll('.faq-item').forEach(item => {
+          item.style.display = 'block';
+        });
+        return;
+      }
+      
+      // Show all categories
+      document.querySelectorAll('.faq-category').forEach(cat => {
+        cat.style.display = 'block';
+      });
+      
+      // Remove active from all category buttons
+      categoryButtons.forEach(btn => btn.classList.remove('active'));
+      
+      // Set "All" as active
+      document.querySelector('.category-btn[data-category="all"]').classList.add('active');
+      
+      // Search in questions and answers
+      let matchFound = false;
+      document.querySelectorAll('.faq-item').forEach(item => {
+        const question = item.querySelector('.faq-question h3').textContent.toLowerCase();
+        const answer = item.querySelector('.faq-answer').textContent.toLowerCase();
+        
+        if (question.includes(searchTerm) || answer.includes(searchTerm)) {
+          item.style.display = 'block';
+          matchFound = true;
+          
+          // Open the item if it matches
+          const answerEl = item.querySelector('.faq-answer');
+          const icon = item.querySelector('.toggle-icon i');
+          answerEl.style.maxHeight = answerEl.scrollHeight + 'px';
+          icon.className = 'fas fa-chevron-up';
+          item.querySelector('.faq-question').classList.add('active');
+        } else {
+          item.style.display = 'none';
+        }
+      });
+      
+      // Show "no results" if no matches
+      if (!matchFound) {
+        document.querySelector('.faq-questions').innerHTML += `
+          <div id="no-results" class="no-results">
+            <p>Ingen resultater for "${searchTerm}"</p>
+            <button class="btn btn-secondary reset-search">Tilbakestill søk</button>
+          </div>
+        `;
+        
+        document.querySelector('.reset-search').addEventListener('click', function() {
+          searchInput.value = '';
+          performSearch();
+          document.getElementById('no-results').remove();
+        });
+      } else {
+        const noResults = document.getElementById('no-results');
+        if (noResults) noResults.remove();
+      }
+    }
+    
+    searchButton.addEventListener('click', performSearch);
+    searchInput.addEventListener('keyup', function(event) {
+      if (event.key === 'Enter') {
+        performSearch();
+      }
+    });
+  });
+</script>

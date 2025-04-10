@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="/css/dashboard.css">
+  <link rel="stylesheet" href="/css/faq.css">
   <%- style %>
 </head>
 <body data-theme="<%= user.preferences?.theme || 'light' %>" 
@@ -57,200 +58,205 @@
           <a href="/user/messages" class="navbar-item <%= activePage === 'messages' ? 'active' : '' %>">
             <i class="fas fa-comments"></i>
             <span>Meldinger</span>
-          </a>
-          <a href="#" class="navbar-item" data-panel="new-ticket-panel">
+          </a>active' : '' %>">
+          <a href="#" class="navbar-item" data-panel="new-ticket-panel"></i>
             <i class="fas fa-plus-circle"></i>
             <span>Ny sak</span>
           </a>
+          <a href="/user/settings" class="navbar-item <%= activePage === 'settings' ? 'active' : '' %>">le"></i>
+            <span>Ny sak</span>
+          </a>pan>Innstillinger</span>
           <a href="/user/settings" class="navbar-item <%= activePage === 'settings' ? 'active' : '' %>">
-            <i class="fas fa-cog"></i>
+            <i class="fas fa-cog"></i> 'admin' || user.role === 'head_admin') { %>
             <span>Innstillinger</span>
-          </a>
-        <% } else if (user.role === 'admin' || user.role === 'head_admin') { %>
-          <!-- Admin Navigation -->
+          </a>ass="navbar-item <%= activePage === 'dashboard' ? 'active' : '' %>">
+        <% } else if (user.role === 'admin' || user.role === 'head_admin') { %>"></i>
+          <!-- Admin Navigation -->pan>Dashbord</span>
           <a href="/admin/dashboard" class="navbar-item <%= activePage === 'dashboard' ? 'active' : '' %>">
-            <i class="fas fa-home"></i>
-            <span>Dashbord</span>
-          </a>
+            <i class="fas fa-home"></i>bar-item <%= activePage === 'tickets' ? 'active' : '' %>">
+            <span>Dashbord</span>-alt"></i>
+          </a>pan>Alle saker</span>
           <a href="/admin/tickets" class="navbar-item <%= activePage === 'tickets' ? 'active' : '' %>">
-            <i class="fas fa-ticket-alt"></i>
-            <span>Alle saker</span>
-          </a>
+            <i class="fas fa-ticket-alt"></i>navbar-item <%= activePage === 'messages' ? 'active' : '' %>">
+            <span>Alle saker</span>nts"></i>
+          </a>pan>Meldinger</span>
           <a href="/admin/messages" class="navbar-item <%= activePage === 'messages' ? 'active' : '' %>">
-            <i class="fas fa-comments"></i>
-            <span>Meldinger</span>
-          </a>
+            <i class="fas fa-comments"></i>"navbar-item <%= activePage === 'statistics' ? 'active' : '' %>">
+            <span>Meldinger</span>bar"></i>
+          </a>pan>Statistikk</span>
           <a href="/admin/statistics" class="navbar-item <%= activePage === 'statistics' ? 'active' : '' %>">
             <i class="fas fa-chart-bar"></i>
-            <span>Statistikk</span>
-          </a>
+            <span>Statistikk</span>m" data-panel="notifications-panel">
+          </a>>
           <% if (user.role === 'head_admin') { %>
-            <a href="#" class="navbar-item" data-panel="notifications-panel">
+            <a href="#" class="navbar-item" data-panel="notifications-panel">iv class="notification-badge" style="display: none;"></div>
               <i class="fas fa-bell"></i>
-              <span>Notifications</span>
-              <div class="notification-badge" style="display: none;"></div>
-            </a>
+              <span>Notifications</span>navbar-item <%= activePage === 'users' ? 'active' : '' %>">
+              <div class="notification-badge" style="display: none;"></div>sers"></i>
+            </a>pan>Users</span>
             <a href="/admin/users" class="navbar-item <%= activePage === 'users' ? 'active' : '' %>">
               <i class="fas fa-users"></i>
-              <span>Users</span>
-            </a>
-          <% } %>
+              <span>Users</span>-item <%= activePage === 'staff' ? 'active' : '' %>">
+            </a>"></i>
+          <% } %>pan>Support-ansatte</span>
           <a href="/admin/staff" class="navbar-item <%= activePage === 'staff' ? 'active' : '' %>">
-            <i class="fas fa-user-shield"></i>
+            <i class="fas fa-user-shield"></i>ass="navbar-item <%= activePage === 'settings' ? 'active' : '' %>">
             <span>Support-ansatte</span>
-          </a>
+          </a>pan>Innstillinger</span>
           <a href="/admin/settings" class="navbar-item <%= activePage === 'settings' ? 'active' : '' %>">
-            <i class="fas fa-cog"></i>
+            <i class="fas fa-cog"></i><% } %>
             <span>Innstillinger</span>
           </a>
-        <% } %>
-        
-        <!-- Common navigation items -->
+        <% } %>item">
+        n-out-alt"></i>
+        <!-- Common navigation items -->pan>Logg ut</span>
         <a href="/auth/logout" class="navbar-item">
-          <i class="fas fa-sign-out-alt"></i>
-          <span>Logg ut</span>
+          <i class="fas fa-sign-out-alt"></i>v>
+          <span>Logg ut</span></nav>
         </a>
       </div>
     </nav>
-    
-    <!-- Main Content Area -->
-    <div class="main-content">
+    t will be different for user and admin -->
+    <!-- Main Content Area -->body %>
+    <div class="main-content"></div>
       <!-- Content will be different for user and admin -->
-      <%- body %>
+      <%- body %>from navbar) -->
     </div>
     
-    <!-- Third Panel (opened from navbar) -->
+    <!-- Third Panel (opened from navbar) -->anel Title</h3>
     <div class="third-panel">
-      <div class="third-panel-header">
-        <h3 class="panel-title">Panel Title</h3>
+      <div class="third-panel-header">lass="fas fa-times"></i>
+        <h3 class="panel-title">Panel Title</h3>v>
         <div class="close-panel">
           <i class="fas fa-times"></i>
         </div>
-      </div>
+      </div>tyle="display: none;">
       <div class="third-panel-content">
-        <!-- Different panel contents -->
+        <!-- Different panel contents -->ate" method="POST" class="ticket-form">
         <div id="new-ticket-panel" style="display: none;">
           <h3>Create New Ticket</h3>
-          <form action="/tickets/create" method="POST" class="ticket-form">
+          <form action="/tickets/create" method="POST" class="ticket-form">ut type="text" id="title" name="title" required>
             <div class="form-group">
               <label for="title">Title</label>
               <input type="text" id="title" name="title" required>
-            </div>
+            </div>d>
             <div class="form-group">
-              <label for="category">Category</label>
+              <label for="category">Category</label>n>
               <select id="category" name="category" required>
-                <option value="">Select a category</option>
-                <option value="technical">Technical Issue</option>
-                <option value="account">Account Problem</option>
-                <option value="billing">Billing Question</option>
+                <option value="">Select a category</option>>
+                <option value="technical">Technical Issue</option>est</option>
+                <option value="account">Account Problem</option> value="other">Other</option>
+                <option value="billing">Billing Question</option>lect>
                 <option value="feature">Feature Request</option>
                 <option value="other">Other</option>
               </select>
-            </div>
+            </div>tarea id="description" name="description" rows="5" required></textarea>
             <div class="form-group">
               <label for="description">Description</label>
               <textarea id="description" name="description" rows="5" required></textarea>
-            </div>
+            </div>ty">
             <div class="form-group">
-              <label for="priority">Priority</label>
-              <select id="priority" name="priority">
-                <option value="low">Low</option>
+              <label for="priority">Priority</label>dium</option>
+              <select id="priority" name="priority"> value="high">High</option>
+                <option value="low">Low</option>lect>
                 <option value="medium" selected>Medium</option>
-                <option value="high">High</option>
-              </select>
-            </div>
+                <option value="high">High</option>on type="submit" class="btn btn-primary btn-block">Submit Ticket</button>
+              </select>rm>
+            </div></div>
             <button type="submit" class="btn btn-primary btn-block">Submit Ticket</button>
-          </form>
+          </form>yle="display: none;">
         </div>
-        
+        gs" method="POST" class="settings-form">
         <div id="settings-panel" style="display: none;">
           <h3>Account Settings</h3>
-          <form action="/user/settings" method="POST" class="settings-form">
+          <form action="/user/settings" method="POST" class="settings-form">ut type="text" id="name" name="name" value="<%= user.name %>" required>
             <div class="form-group">
               <label for="name">Name</label>
               <input type="text" id="name" name="name" value="<%= user.name %>" required>
-            </div>
+            </div>ut type="email" id="email" name="email" value="<%= user.email %>" required>
             <div class="form-group">
               <label for="email">Email</label>
               <input type="email" id="email" name="email" value="<%= user.email %>" required>
             </div>
-            <div class="form-group">
-              <label for="theme">Theme</label>
-              <select id="theme" name="theme">
+            <div class="form-group">on>
+              <label for="theme">Theme</label> value="dark" <%= user.preferences.theme === 'dark' ? 'selected' : '' %>>Dark</option>
+              <select id="theme" name="theme">lect>
                 <option value="light" <%= user.preferences.theme === 'light' ? 'selected' : '' %>>Light</option>
                 <option value="dark" <%= user.preferences.theme === 'dark' ? 'selected' : '' %>>Dark</option>
-              </select>
+              </select>>
             </div>
-            <div class="form-group">
-              <label for="chatPosition">Chat Position</label>
-              <select id="chatPosition" name="chatPosition">
+            <div class="form-group">on>
+              <label for="chatPosition">Chat Position</label> value="right" <%= user.preferences.layout.chatPosition === 'right' ? 'selected' : '' %>>Right</option>
+              <select id="chatPosition" name="chatPosition">lect>
                 <option value="middle" <%= user.preferences.layout.chatPosition === 'middle' ? 'selected' : '' %>>Middle</option>
-                <option value="right" <%= user.preferences.layout.chatPosition === 'right' ? 'selected' : '' %>>Right</option>
-              </select>
+                <option value="right" <%= user.preferences.layout.chatPosition === 'right' ? 'selected' : '' %>>Right</option>on type="submit" class="btn btn-primary btn-block">Save Settings</button>
+              </select></form>
             </div>
-            <button type="submit" class="btn btn-primary btn-block">Save Settings</button>
+            <button type="submit" class="btn btn-primary btn-block">Save Settings</button>d">
           </form>
-          
+          -password" method="POST">
           <div class="change-password">
             <h3>Change Password</h3>
-            <form action="/user/change-password" method="POST">
+            <form action="/user/change-password" method="POST">ut type="password" id="currentPassword" name="currentPassword" required>
               <div class="form-group">
                 <label for="currentPassword">Current Password</label>
                 <input type="password" id="currentPassword" name="currentPassword" required>
-              </div>
+              </div>ut type="password" id="newPassword" name="newPassword" required>
               <div class="form-group">
                 <label for="newPassword">New Password</label>
                 <input type="password" id="newPassword" name="newPassword" required>
-              </div>
+              </div>ut type="password" id="confirmPassword" name="confirmPassword" required>
               <div class="form-group">
-                <label for="confirmPassword">Confirm New Password</label>
-                <input type="password" id="confirmPassword" name="confirmPassword" required>
-              </div>
-              <button type="submit" class="btn btn-secondary btn-block">Change Password</button>
+                <label for="confirmPassword">Confirm New Password</label>on type="submit" class="btn btn-secondary btn-block">Change Password</button>
+                <input type="password" id="confirmPassword" name="confirmPassword" required>rm>
+              </div>v>
+              <button type="submit" class="btn btn-secondary btn-block">Change Password</button></div>
             </form>
-          </div>
+          </div>anel" style="display: none;">
         </div>
         
         <div id="notifications-panel" style="display: none;">
-          <h3>Notifications</h3>
-          <div class="notifications-list">
-            <!-- Notification items will be populated here -->
-            <p class="empty-notification">No new notifications</p>
-          </div>
-        </div>
+          <h3>Notifications</h3>lass="empty-notification">No new notifications</p>
+          <div class="notifications-list">v>
+            <!-- Notification items will be populated here -->v>
+            <p class="empty-notification">No new notifications</p>v>
+          </div>v>
+        </div></div>
       </div>
     </div>
-  </div>
+  </div><div class="notification-center"></div>
   
-  <!-- Notification Center -->
+  <!-- Notification Center -->script>
   <div class="notification-center"></div>
-  
-  <script src="/socket.io/socket.io.js"></script>
+  /js/notifications.js"></script>
+  <script src="/socket.io/socket.io.js"></script><%- script %>
   <script src="/js/dashboard.js"></script>
   <script src="/js/notifications.js"></script>
   <%- script %>
-  
+  MContentLoaded', function() {
   <script>
-    // Convert flash messages to notifications
-    document.addEventListener('DOMContentLoaded', function() {
+    // Convert flash messages to notificationse');
+    document.addEventListener('DOMContentLoaded', function() {const errorMessages = document.querySelectorAll('.flash-message.error .message');
       if (window.notifications) {
         const successMessages = document.querySelectorAll('.flash-message.success .message');
-        const errorMessages = document.querySelectorAll('.flash-message.error .message');
-        
+        const errorMessages = document.querySelectorAll('.flash-message.error .message');indow.notifications.success(msg.textContent);
+        });
         successMessages.forEach(msg => {
           window.notifications.success(msg.textContent);
+        });indow.notifications.error(msg.textContent);
         });
-        
         errorMessages.forEach(msg => {
           window.notifications.error(msg.textContent);
-        });
-        
-        // Remove flash messages from DOM after conversion
+        });flash-message').forEach(el => {
+        l.style.display = 'none';
+        // Remove flash messages from DOM after conversion });
         document.querySelectorAll('.flash-message').forEach(el => {
           el.style.display = 'none';
-        });
+        });ipt>
       }
-    });
+    });</html>
+
   </script>
 </body>
+
 </html>

@@ -1,22 +1,23 @@
 const express = require('express');
 const router = express.Router();
-const { protect } = require('../middleware/auth');
+const indexController = require('../controllers/indexController');
+const faqController = require('../controllers/faqController');
 
-// Home page
-router.get('/', (req, res) => {
-  res.render('index', { title: 'Home' });
-});
+// Homepage route
+router.get('/', indexController.getHomePage);
 
-// Redirect based on user role
-router.get('/dashboard', protect, (req, res) => {
-  // Redirect to appropriate dashboard based on user role
-  if (req.user.role === 'admin_requester') {
-    return res.redirect('/user/waiting');
-  } else if (req.user.role === 'user') {
-    return res.redirect('/user/dashboard');
-  } else {
-    return res.redirect('/admin/dashboard');
-  }
-});
+// FAQ route
+router.get('/faq', faqController.getFaqPage);
+
+// Contact page
+router.get('/contact', indexController.getContactPage);
+router.post('/contact', indexController.submitContactForm);
+
+// Error handling
+router.get('/error', indexController.getErrorPage);
+
+// Static pages
+router.get('/terms', indexController.getTermsPage);
+router.get('/privacy', indexController.getPrivacyPage);
 
 module.exports = router;

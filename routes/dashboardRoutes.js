@@ -14,7 +14,6 @@ router.get('/user/settings', dashboardController.getUserSettings);
 // Admin dashboard routes
 router.get('/admin/dashboard', authorize('admin', 'head_admin'), dashboardController.getAdminDashboard);
 router.get('/admin/tickets', authorize('admin', 'head_admin'), dashboardController.getAdminTickets);
-router.get('/admin/tickets/assigned', authorize('admin', 'head_admin'), dashboardController.getAssignedTickets);
 router.get('/admin/messages', authorize('admin', 'head_admin'), dashboardController.getAdminMessages);
 router.get('/admin/statistics', authorize('admin', 'head_admin'), dashboardController.getAdminStatistics);
 router.get('/admin/users', authorize('head_admin'), dashboardController.getAdminUsers);
