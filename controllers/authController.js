@@ -72,50 +72,61 @@ exports.register = async (req, res) => {
 // Login user
 exports.login = async (req, res) => {
   try {
-    // Check for validation errors
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      req.flash('error', errors.array()[0].msg);
-      return res.redirect('/auth/login');
-    }
-    
     const { email, password } = req.body;
     
-    // Find user by email
+    // Validate input
+    if (!email || !password) {
+      req.flash('error', 'Please provide email and password');
+      return res.redirect('/login');
+    }
+    
+    // Find user
     const user = await User.findOne({ email });
     
-    // Check if user exists and password is correct
-    if (!user || !(await user.comparePassword(password))) {
-      req.flash('error', 'Invalid email or password');
-      return res.redirect('/auth/login');
+    if (!user) {
+      req.flash('error', 'Invalid credentials');
+      return res.redirect('/login');
     }
     
-    // Generate token
+    // Check password
+    const isPasswordCorrect = await user.comparePassword(password);
+    if (!isPasswordCorrect) {
+      req.flash('error', 'Invalid credentials');
+      return res.redirect('/login');
+    }
+    
+    // Create token
     const token = generateToken(user._id);
     
-    // Set token in cookie - update the cookie settings
+    // Store token in cookie - FIXING THE COOKIE NAME TO MATCH REGISTER FUNCTION
     res.cookie('jwt', token, { 
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // Only set secure in production
-      sameSite: 'lax', // Helps with CSRF protection
-      maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      secure: process.env.NODE_ENV === 'production'
     });
     
-    // Set success flash message
-    req.flash('success', 'Login successful! Welcome back.');
+    // Create user session with essential data
+    req.session.user = {
+      userId: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role
+    };
+    
+    // Add console log for debugging
+    console.log('Login successful - Token generated:', token ? 'Yes' : 'No');
     
     // Redirect based on role
-    if (user.role === 'admin_requester') {
-      res.redirect('/user/waiting');
-    } else if (user.role === 'user') {
-      res.redirect('/user/dashboard');
+    if (user.role === 'head_admin' || user.role === 'admin') {
+      return res.redirect('/admin/dashboard');
     } else {
-      res.redirect('/admin/dashboard');
+      return res.redirect('/dashboard');
     }
+    
   } catch (error) {
     console.error('Login error:', error);
-    req.flash('error', 'An error occurred during login');
-    res.redirect('/auth/login');
+    req.flash('error', 'An error occurred. Please try again.');
+    return res.redirect('/login');
   }
 };
 
