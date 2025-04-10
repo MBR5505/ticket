@@ -50,7 +50,9 @@ exports.register = async (req, res) => {
     // Set token in cookie
     res.cookie('jwt', token, { 
       httpOnly: true,
-      maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      secure: false, // Change to false if not using HTTPS
+      sameSite: 'lax' // Add this to make cookies work better across sites
     });
     
     // Set success flash message
@@ -98,11 +100,12 @@ exports.login = async (req, res) => {
     // Create token
     const token = generateToken(user._id);
     
-    // Store token in cookie - FIXING THE COOKIE NAME TO MATCH REGISTER FUNCTION
+    // Store token in cookie with more permissive settings
     res.cookie('jwt', token, { 
       httpOnly: true,
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-      secure: process.env.NODE_ENV === 'production'
+      secure: false, // Change to false if not using HTTPS
+      sameSite: 'lax' // Add this to make cookies work better across sites
     });
     
     // Create user session with essential data
